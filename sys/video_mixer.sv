@@ -128,9 +128,16 @@ wire [DWIDTH_SD:0] G_sd;
 wire [DWIDTH_SD:0] B_sd;
 wire hs_sd, vs_sd, hb_sd, vb_sd, ce_pix_sd;
 
+
+
 scandoubler #(.LENGTH(LINE_LENGTH), .HALF_DEPTH(HALF_DEPTH_SD)) sd
 (
-	.*,
+	.clk_vid(clk_vid),
+	.ce_pix(ce_pix),
+	
+	.hq2x(hq2x),
+	.mono(mono),	
+	
 	.hs_in(hs_g),
 	.vs_in(vs_g),
 	.hb_in(hb_g),
@@ -138,7 +145,7 @@ scandoubler #(.LENGTH(LINE_LENGTH), .HALF_DEPTH(HALF_DEPTH_SD)) sd
 	.r_in(R_gamma),
 	.g_in(G_gamma),
 	.b_in(B_gamma),
-
+	
 	.ce_pix_out(ce_pix_sd),
 	.hs_out(hs_sd),
 	.vs_out(vs_sd),

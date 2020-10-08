@@ -710,7 +710,9 @@ ascal
 	.vmin     (vmin),
 	.vmax     (vmax),
 
-	.mode     ({~lowlat,LFB_EN ? LFB_FLT : |scaler_flt,2'b00}),
+	//.mode     ({~lowlat,LFB_EN ? LFB_FLT : |scaler_flt,2'b00}),
+	.mode     (5'b0_0_000),		// [4]=TBD. [3]=Single FB. [2:0]=Nearest Neighbour.
+	
 	.poly_clk (clk_sys),
 	.poly_a   (coef_addr),
 	.poly_dw  (coef_data),
@@ -736,10 +738,17 @@ ascal
 	//.o_fb_format      (FB_FMT),
 	//.o_fb_base        (FB_BASE),
 	//.o_fb_stride      (FB_STRIDE),
+	
+// O_FB_FORMAT : Framebuffer format
+//  [2:0] : 011=8bpp(palette) 100=16bpp 101=24bpp 110=32bpp
+//  [3]   : 0=16bits 565 1=16bits 1555
+//  [4]   : 0=RGB  1=BGR (for 16/24/32 modes)
+//  [5]   : TBD
+	
 	.o_fb_ena         (1'b1),
-	.o_fb_hsize       (12'd1024),
-	.o_fb_vsize       (12'd512),
-	.o_fb_format      (6'b0_1_0_100),	// [5]=0. [4]=1=BGR. [3]=1=16bits 1555. [2:0]=100=16bpp direct.
+	.o_fb_hsize       (my_fb_hsize),
+	.o_fb_vsize       (my_fb_vsize),
+	.o_fb_format      (6'b0_1_1_100),	// [5]=0. [4]=1=BGR. [3]=1=16bits 1555. [2:0]=100=16bpp direct.
 	.o_fb_base        (32'h10000000),	// PSX GPU should be writing to the 256MByte offset in DDR?
 	.o_fb_stride      (14'd0),
 	
@@ -755,6 +764,20 @@ ascal
 	.avl_byteenable   (vbuf_byteenable)
 );
 `endif
+
+// FB Zoom,1024x512,512x512,256x256,128x128;"
+
+wire [11:0] my_fb_hsize = (FB_ZOOM==3'd0) ? 12'd1024:
+								  (FB_ZOOM==3'd1) ? 12'd512 :
+								  (FB_ZOOM==3'd2) ? 12'd256 :
+								  (FB_ZOOM==3'd3) ? 12'd128 :
+														  12'd1024;
+
+wire [11:0] my_fb_vsize = (FB_ZOOM==3'd0) ? 12'd512 :
+								  (FB_ZOOM==3'd1) ? 12'd512 :
+								  (FB_ZOOM==3'd2) ? 12'd256 :
+								  (FB_ZOOM==3'd3) ? 12'd128 :
+														  12'd1024;
 
 reg        LFB_EN     = 0;
 reg        LFB_FLT    = 0;
@@ -1565,8 +1588,12 @@ emu emu
 	.bridge_m0_write( bridge_m0_write ),
 	.bridge_m0_read( bridge_m0_read ),
 	.bridge_m0_byteenable( bridge_m0_byteenable ),
-	.bridge_m0_clk( bridge_m0_clk )
+	.bridge_m0_clk( bridge_m0_clk ),
+	
+	.FB_ZOOM( FB_ZOOM )
 );
+
+wire [2:0] FB_ZOOM;
 
 endmodule
 

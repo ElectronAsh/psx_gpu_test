@@ -519,9 +519,6 @@ reg 	[2:0]	stencilWritePairC;
 reg	 	[1:0]	stencilWriteSelectC,stencilWriteValueC;
 // ------------------------------------------------------------------------
 
-wire signed [11:0]	minXTri;
-wire signed [11:0]	maxXTri;
-
 wire				isV0,isV1,isV2;
 wire 				isLineRightPix;
 wire				isLineLeftPix;
@@ -642,7 +639,7 @@ assign validDataOut = pDataOutValid;
 
 assign IRQRequest = GPU_REG_IRQSet;
 
-wire [31:0] fifoDataOut;
+(*keep*) wire [31:0] fifoDataOut;
 assign isINFifoFull     = isFifoFullLSB  | isFifoFullMSB;
 assign isFifoEmpty    = isFifoEmptyLSB & isFifoEmptyMSB;
 assign isFifoNotEmpty = !isFifoEmpty;
@@ -3153,9 +3150,9 @@ wire signed [11:0]	maxX0X1 = isNegXAxis   ? RegX0 : RegX1;
 wire signed [11:0]	minY0Y1 = isNegYAxis   ? RegY1 : RegY0;
 wire signed [11:0]	maxY0Y1 = isNegYAxis   ? RegY0 : RegY1;
 // Vertex0/1/2 Box
-assign				minXTri = RegX2 < minX0X1 ? RegX2 : minX0X1;
+wire signed [11:0]	minXTri = RegX2 < minX0X1 ? RegX2 : minX0X1;
 wire signed [11:0]	minYTri = RegY2 < minY0Y1 ? RegY2 : minY0Y1;
-assign				maxXTri = RegX2 > maxX0X1 ? RegX2 : maxX0X1;
+wire signed [11:0]	maxXTri = RegX2 > maxX0X1 ? RegX2 : maxX0X1;
 wire signed [11:0]	maxYTri = RegY2 > maxY0Y1 ? RegY2 : maxY0Y1;
 
 // Primitive Size

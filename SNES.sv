@@ -131,8 +131,12 @@ module emu
 	input   wire         bridge_m0_write,
 	input   wire         bridge_m0_read,
 	input   wire         bridge_m0_byteenable,
-	output  wire         bridge_m0_clk
+	output  wire         bridge_m0_clk,
+	
+	output wire [2:0] FB_ZOOM
 );
+
+assign FB_ZOOM = status[11:9];
 
 assign ADC_BUS  = 'Z;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
@@ -145,8 +149,15 @@ assign LED_DISK  = 0;
 assign LED_POWER = 0;
 //assign BUTTONS   = osd_btn;
 
-assign VIDEO_ARX = status[31:30] == 2 ? 8'd16 : (status[30] ? 8'd8 : 8'd64);
-assign VIDEO_ARY = status[31:30] == 2 ? 8'd9  : (status[30] ? 8'd7 : 8'd49);
+assign VIDEO_ARX = status[31:30]==0 ? 8'd4 :
+						 status[31:30]==1 ? 8'd8 :
+						 status[31:30]==2 ? 8'd16 :
+												  8'd2;
+												  
+assign VIDEO_ARY = status[31:30]==0 ? 8'd3 :
+						 status[31:30]==1 ? 8'd7 :
+						 status[31:30]==2 ? 8'd9 :
+												  8'd1;
 
 //assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = 0;
 assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
@@ -175,6 +186,7 @@ wire reset = RESET | buttons[1] | status[0] | cart_download;
 // 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 
 
+
 `include "build_id.v"
 parameter CONF_STR = {
     "SNES;;",
@@ -183,8 +195,8 @@ parameter CONF_STR = {
     "OEF,Video Region,Auto,NTSC,PAL;",
     "O13,ROM Header,Auto,No Header,LoROM,HiROM,ExHiROM;",
     "-;",
-    "C,Cheats;",
-    "H2OO,Cheats Enabled,Yes,No;",
+    "-;",
+    "P1O9B,FB Zoom,1024x512,512x512,256x256,128x128;",
     "-;",
     "D0RC,Load Backup RAM;",
     "D0RD,Save Backup RAM;",
@@ -193,8 +205,8 @@ parameter CONF_STR = {
 
 	 "P1,Audio & Video;",
     "P1-;",
-    "P1OUV,Aspect Ratio,4:3,8:7,16:9;",
-    "P1O9B,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+    "P1OUV,Aspect Ratio,4:3,8:7,16:9,2:1;",
+    "-;",
     "P1OG,Pseudo Transparency,Blend,Off;",
     "P1-;",
     "P1OJK,Stereo Mix,None,25%,50%,100%;", 
@@ -542,6 +554,7 @@ wire o_busyClient;
 wire o_dataValidClient;
 wire [255:0] o_dataClient;
 
+/*
 PSX_DDR_Interface PSX_DDR_Interface_inst
 (
 	.i_clk( clk_sys ) ,						// input  i_clk
@@ -578,16 +591,57 @@ wire [7:0] o_burstLength;
 wire [31:0] o_dataMem;
 wire [25:0] o_targetAddr;
 wire [3:0] o_byteEnableMem;
+*/
+
+
+hdlPSXDDR hdlPSXDDR_inst
+(
+	.i_clk( clk_sys ) ,		// input  i_clk
+	.i_nRst( !reset ) ,		// input  i_nRst
+	
+	.i_command(i_command) ,						// input  i_command
+	.i_writeElseRead(i_writeElseRead) ,		// input  i_writeElseRead
+	.i_commandSize(i_commandSize) ,			// input [1:0] i_commandSize
+	.i_targetAddr(i_targetAddr) ,				// input [14:0] i_targetAddr
+	.i_subAddr(i_subAddr) ,						// input [2:0] i_subAddr
+	.i_writeMask(i_writeMask) ,				// input [15:0] i_writeMask
+	.i_dataClient(i_dataClient) ,				// input [255:0] i_dataClient
+	.o_busyClient(o_busyClient) ,				// output  o_busyClient
+	.o_dataValidClient(o_dataValidClient) ,// output  o_dataValidClient
+	.o_dataClient(o_dataClient) ,				// output [255:0] o_dataClient
+	
+	.o_targetAddr(o_targetAddr) ,				// output [16:0] o_targetAddr
+	.o_burstLength(o_burstLength) ,			// output [2:0] o_burstLength
+	.i_busyMem(i_busyMem) ,						// input  i_busyMem
+	.o_writeEnableMem(o_writeEnableMem) ,	// output  o_writeEnableMem
+	.o_readEnableMem(o_readEnableMem) ,		// output  o_readEnableMem
+	.o_dataMem(o_dataMem) ,						// output [63:0] o_dataMem
+	.o_byteEnableMem(o_byteEnableMem) ,		// output [7:0] o_byteEnableMem
+	.i_dataValidMem(i_dataValidMem) ,		// input  i_dataValidMem
+	.i_dataMem(i_dataMem) 						// input [63:0] i_dataMem
+);
+
+wire [16:0] o_targetAddr;
+wire [2:0] o_burstLength;
+wire o_writeEnableMem;
+wire o_readEnableMem;
+wire [63:0] o_dataMem;
+wire [7:0] o_byteEnableMem;
+
+wire i_busyMem = DDRAM_BUSY;
+wire [63:0] i_dataMem = DDRAM_DOUT;
+wire i_dataValidMem = DDRAM_DOUT_READY;
+
 
 // From the core TO the Altera DDR controller...
 assign DDRAM_CLK = clk_sys;
-assign DDRAM_BURSTCNT = o_burstLength;					// (from the core TO DDR).
+assign DDRAM_BURSTCNT = o_burstLength;	// DDRAM_BURSTCNT is 8 bits.
 
-//assign DDRAM_ADDR = {3'b001, o_targetAddr[24:0] };	// This should map the GPU Framebuffer at 0x10000000 in DDR (BYTE address!).
-assign DDRAM_ADDR = {3'b001, o_targetAddr[24:1],1'b0};	// This should map the GPU Framebuffer at 0x10000000 in DDR (BYTE address!).
+// This should map the GPU Framebuffer at 0x10000000 in DDR (BYTE address!).
+assign DDRAM_ADDR = {9'b100000000, o_targetAddr[16:0]};	// Note: DDRAM_ADDR is the 64-bit WORD address!
 
-assign DDRAM_DIN = !o_targetAddr[0] ? {32'h00000000, o_dataMem}  : {o_dataMem, 32'h00000000};	// Note: DDRAM_DIN is 64-bit.
-assign DDRAM_BE  = !o_targetAddr[0] ? {4'b0000, o_byteEnableMem} : {o_byteEnableMem, 4'b0000};	// Note: DDRAM_BE has 8 bits.
+assign DDRAM_DIN = o_dataMem;				// Note: DDRAM_DIN is 64-bit.
+assign DDRAM_BE  = o_byteEnableMem;		// Note: DDRAM_BE has 8 bits, and the bits are active-High.
 assign DDRAM_WE  = o_writeEnableMem;
 assign DDRAM_RD  = o_readEnableMem;
 
