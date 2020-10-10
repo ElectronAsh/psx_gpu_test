@@ -123,7 +123,7 @@ module emu
 	input         OSD_STATUS,
 	
 	output  wire         bridge_m0_waitrequest,
-	output  wire [31:0]  bridge_m0_readdata,
+	output  reg  [31:0]  bridge_m0_readdata,
 	output  reg          bridge_m0_readdatavalid,
 	input   wire [6:0]   bridge_m0_burstcount,
 	input   wire [31:0]  bridge_m0_writedata,
@@ -389,8 +389,6 @@ assign bridge_m0_clk = clk_sys;						// output  bridge_m0_clk
 
 wire [31:0] flag_data = {1'b0, DMA_REQ, IRQRequest, dbg_canWrite, mydebugCnt[27:0]};
 
-assign bridge_m0_readdata = (bridge_m0_address[3:0]==4'h8) ? flag_data : cpuDataOut;		// output [31:0] bridge_m0_readdata
-
 
 reg axi_wait;
 assign bridge_m0_waitrequest = axi_wait;
@@ -496,12 +494,14 @@ else begin
 					end
 
 					4'h8: begin						// Read from Flags / Debug, without GPU select signals.
+						bridge_m0_readdata <= flag_data;
 						axi_readvalid <= 1'b1;	// Pulse High for one clock (no wait for validDataOut).
 						axi_wait <= 1'b0;			// Need to assert this before returning to state 0!
 						cmd_state <= 0;
 					end
 
 					4'hC: begin						// Read from cpuDataOut, without GPU select signals (for DMA).
+						bridge_m0_readdata <= cpuDataOut;
 						axi_readvalid <= 1'b1;	// Pulse High for one clock (no wait for validDataOut).
 						axi_wait <= 1'b0;			// Need to assert this before returning to state 0!
 						cmd_state <= 0;
@@ -531,6 +531,7 @@ else begin
 			DMA_ACK <= 1'b0;
 			
 			if (validDataOut) begin
+				bridge_m0_readdata <= cpuDataOut;
 				axi_readvalid <= 1'b1;
 				axi_wait <= 1'b0;		// Need to assert this before returning to state 0!
 				cmd_state <= 0;		// (to handle cases when axi_read or axi_write are held high.)

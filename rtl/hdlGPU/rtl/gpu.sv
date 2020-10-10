@@ -570,8 +570,8 @@ begin
         rdebugCnt = rdebugCnt + 32'd1;
     end
 end
-assign mydebugCnt =rdebugCnt;
-assign dbg_canWrite = isINFifoFull;
+assign mydebugCnt = rdebugCnt;
+assign dbg_canWrite = !isINFifoFull;
 
 // ---------------------------------------------
 
