@@ -252,8 +252,8 @@ parameter	MEM_CMD_PIXEL2VRAM	= 3'b001,
 
 wire isFifoFullLSB, isFifoFullMSB,isFifoEmptyLSB, isFifoEmptyMSB;
 wire isINFifoFull;
-wire isFifoEmpty;
-wire isFifoNotEmpty;
+wire isFifoEmpty32;
+wire isFifoNotEmpty32;
 wire rstInFIFO;
 
 // ----------------------------- Parsing Stage -----------------------------------
@@ -519,6 +519,9 @@ reg 	[2:0]	stencilWritePairC;
 reg	 	[1:0]	stencilWriteSelectC,stencilWriteValueC;
 // ------------------------------------------------------------------------
 
+wire signed [11:0]	minXTri;
+wire signed [11:0]	maxXTri;
+
 wire				isV0,isV1,isV2;
 wire 				isLineRightPix;
 wire				isLineLeftPix;
@@ -640,14 +643,14 @@ assign validDataOut = pDataOutValid;
 assign IRQRequest = GPU_REG_IRQSet;
 
 (*keep*) wire [31:0] fifoDataOut;
-assign isINFifoFull     = isFifoFullLSB  | isFifoFullMSB;
-assign isFifoEmpty    = isFifoEmptyLSB & isFifoEmptyMSB;
-assign isFifoNotEmpty = !isFifoEmpty;
-assign rstInFIFO      = rstGPU | rstCmd;
+(*keep*) assign isINFifoFull     = isFifoFullLSB  | isFifoFullMSB;
+(*keep*) assign isFifoEmpty32    = isFifoEmptyLSB | isFifoEmptyMSB;
+(*keep*) assign isFifoNotEmpty32 = !isFifoEmpty32;
+(*keep*) assign rstInFIFO      = rstGPU | rstCmd;
 
-wire readLFifo, readMFifo;
-wire readFifoLSB	= readFifo | readLFifo;
-wire readFifoMSB	= readFifo | readMFifo;
+(*keep*) wire readLFifo, readMFifo;
+(*keep*) wire readFifoLSB	= readFifo | readLFifo;
+(*keep*) wire readFifoMSB	= readFifo | readMFifo;
 
 wire [55:0] memoryWriteCommand;
 
@@ -1112,9 +1115,9 @@ end
 
 // [Command Type]
 wire bIsBase0x				= (command[7:5]==3'b000);
-wire bIsBase01			= (command[4:0]==5'd1  );
-wire bIsBase02			= (command[4:0]==5'd2  );
-wire bIsBase1F			= (command[4:0]==5'd31 );
+wire bIsBase01				= (command[4:0]==5'd1  );
+wire bIsBase02				= (command[4:0]==5'd2  );
+wire bIsBase1F				= (command[4:0]==5'd31 );
 
 wire bIsPolyCommand			= (command[7:5]==3'b001);
 wire bIsRectCommand			= (command[7:5]==3'b011);
@@ -2679,7 +2682,7 @@ begin
                 // Condition with 'FifoDataValid' necessary :
                 // => If not done, state machine skip the 4th vertex loading to load directly 4th texture without loading the coordinates. (fifo not valid as we waited for primitive to complete)
                 nextCondUseFIFO		= 1;
-                nextLogicalState	= FifoDataValid ? UV_LOAD : VERTEX_LOAD;
+                nextLogicalState	= UV_LOAD;
             end else begin
                 // End command if it is a terminator line or 2 vertex line only
                 // Or a 4 point polygon or 3 point polygon.
@@ -2724,9 +2727,9 @@ begin
                     //
                     nextCondUseFIFO		= (/*issue.*/issuePrimitive == NO_ISSUE); //	TODO ??? OLD COMMENT Fix, proposed multiline support ((issuePrimitive == NO_ISSUE) | !bIsLineCommand); // 1 before line, !bIsLineCommand is a hack. Because...
                     if (/*issue.*/issuePrimitive != NO_ISSUE) begin
-                        nextLogicalState	= (FifoDataValid & bIsPerVtxCol) ? COLOR_LOAD_GARAGE : VERTEX_LOAD_GARAGE; // Next Vertex or stay current vertex until loaded.
+                        nextLogicalState	= bIsPerVtxCol ? COLOR_LOAD_GARAGE : VERTEX_LOAD_GARAGE; // Next Vertex or stay current vertex until loaded.
                     end else begin
-                        nextLogicalState	= (FifoDataValid & bIsPerVtxCol) ? COLOR_LOAD : VERTEX_LOAD; // Next Vertex or stay current vertex until loaded.
+                        nextLogicalState	= bIsPerVtxCol ? COLOR_LOAD        : VERTEX_LOAD; // Next Vertex or stay current vertex until loaded.
                     end
                 end
             end
@@ -2774,7 +2777,7 @@ begin
                 // Allow to complete UV LOAD of last vertex and go to COMPLETE
                 // only if we can push the triangle and that the incoming FIFO data is valid.
                 nextCondUseFIFO		= !(canIssueWork & FifoDataValid);	// Instead of FIFO state, it uses
-                nextLogicalState	=  (canIssueWork & FifoDataValid) ? WAIT_COMMAND_COMPLETE : UV_LOAD;	// For now, no optimization of the state machine, FIFO data or not : DEFAULT_STATE.
+				nextLogicalState	=  canIssueWork ? WAIT_COMMAND_COMPLETE : UV_LOAD; // For now, no optimization of the state machine, FIFO data or not : DEFAULT_STATE.
             end else begin
 
                 //
@@ -2785,29 +2788,9 @@ begin
                 //
                 nextCondUseFIFO		= (/*issue.*/issuePrimitive == NO_ISSUE); //	TODO ??? OLD COMMENT Fix, proposed multiline support ((issuePrimitive == NO_ISSUE) | !bIsLineCommand); // 1 before line, !bIsLineCommand is a hack. Because...
                 if (/*issue.*/issuePrimitive != NO_ISSUE) begin
-                    nextLogicalState	= (FifoDataValid & bIsPerVtxCol) ? COLOR_LOAD_GARAGE : VERTEX_LOAD_GARAGE; // Next Vertex or stay current vertex until loaded.
+                    nextLogicalState	= bIsPerVtxCol ? COLOR_LOAD_GARAGE : VERTEX_LOAD_GARAGE; // Next Vertex or stay current vertex until loaded.
                 end else begin
-                    nextLogicalState	= (FifoDataValid & bIsPerVtxCol) ? COLOR_LOAD : VERTEX_LOAD; // Next Vertex or stay current vertex until loaded.
-                end
-
-                if (bIsPerVtxCol) begin
-                    if (/*issue.*/issuePrimitive != NO_ISSUE) begin
-                        nextCondUseFIFO		= 0;
-                        nextLogicalState	= COLOR_LOAD_GARAGE; // Next Vertex or stay current vertex until loaded.
-                    end else begin
-                        nextCondUseFIFO		= 1;
-                        nextLogicalState	= FifoDataValid ? COLOR_LOAD : UV_LOAD; // Next Vertex or stay current vertex until loaded.
-                    end
-                end else begin
-                    // Same here : MUST CHECK 'FifoDataValid' to force reading the values in another cycle...
-                    // Can not issue if data is not valid.
-                    if (/*issue.*/issuePrimitive != NO_ISSUE) begin
-                        nextCondUseFIFO		= 0;
-                        nextLogicalState	= VERTEX_LOAD_GARAGE;	// Next Vertex stuff...
-                    end else begin
-                        nextCondUseFIFO		= 1;
-                        nextLogicalState	= VERTEX_LOAD;	// Next Vertex stuff...
-                    end
+                    nextLogicalState	= bIsPerVtxCol ? COLOR_LOAD : VERTEX_LOAD; // Next Vertex or stay current vertex until loaded.
                 end
             end
         end
@@ -2838,9 +2821,10 @@ end
 
 // WE Read from the FIFO when FIFO has data, but also when the GPU is not busy rendering, else we stop loading commands...
 // By blocking the state machine, we also block all the controls more easily. (Vertex loading, command issue, etc...)
-wire canReadFIFO			= isFifoNotEmpty & canIssueWork;
+wire canReadFIFO			= isFifoNotEmpty32 & canIssueWork;
 assign readFifo				= (nextCondUseFIFO & canReadFIFO);
-assign nextState			= ((!nextCondUseFIFO) | readFifo) ? nextLogicalState : currState;
+wire authorizeNextState     = ((!nextCondUseFIFO) | readFifo);
+assign nextState			= authorizeNextState ? nextLogicalState : currState;
 assign issuePrimitiveReal	= canIssueWork ? /*issue.*/issuePrimitive : NO_ISSUE;
 
 
@@ -3150,9 +3134,9 @@ wire signed [11:0]	maxX0X1 = isNegXAxis   ? RegX0 : RegX1;
 wire signed [11:0]	minY0Y1 = isNegYAxis   ? RegY1 : RegY0;
 wire signed [11:0]	maxY0Y1 = isNegYAxis   ? RegY0 : RegY1;
 // Vertex0/1/2 Box
-wire signed [11:0]	minXTri = RegX2 < minX0X1 ? RegX2 : minX0X1;
+assign				minXTri = RegX2 < minX0X1 ? RegX2 : minX0X1;
 wire signed [11:0]	minYTri = RegY2 < minY0Y1 ? RegY2 : minY0Y1;
-wire signed [11:0]	maxXTri = RegX2 > maxX0X1 ? RegX2 : maxX0X1;
+assign				maxXTri = RegX2 > maxX0X1 ? RegX2 : maxX0X1;
 wire signed [11:0]	maxYTri = RegY2 > maxY0Y1 ? RegY2 : maxY0Y1;
 
 // Primitive Size

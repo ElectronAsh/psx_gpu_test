@@ -748,7 +748,7 @@ ascal
 	.o_fb_ena         (1'b1),
 	.o_fb_hsize       (my_fb_hsize),
 	.o_fb_vsize       (my_fb_vsize),
-	.o_fb_format      (6'b0_1_1_100),	// [5]=0. [4]=1=BGR. [3]=1=16bits 1555. [2:0]=100=16bpp direct.
+	.o_fb_format      (6'b0_0_1_100),	// [5]=0. [4]=0=RGB (which should be correct for the PSX BGR mode?. [3]=1=16bits 1555. [2:0]=100=16bpp direct.
 	.o_fb_base        (32'h10000000),	// PSX GPU should be writing to the 256MByte offset in DDR?
 	.o_fb_stride      (14'd0),
 	

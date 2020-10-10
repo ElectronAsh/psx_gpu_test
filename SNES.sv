@@ -387,7 +387,7 @@ wire validDataOut;
 
 assign bridge_m0_clk = clk_sys;						// output  bridge_m0_clk
 
-wire [31:0] flag_data = {dbg_canWrite, IRQRequest, DMA_REQ, mydebugCnt[27:0] };
+wire [31:0] flag_data = {1'b0, DMA_REQ, IRQRequest, dbg_canWrite, mydebugCnt[27:0]};
 
 assign bridge_m0_readdata = (bridge_m0_address[3:0]==4'h8) ? flag_data : cpuDataOut;		// output [31:0] bridge_m0_readdata
 
@@ -641,7 +641,11 @@ assign DDRAM_BURSTCNT = o_burstLength;	// DDRAM_BURSTCNT is 8 bits.
 assign DDRAM_ADDR = {9'b100000000, o_targetAddr[16:0]};	// Note: DDRAM_ADDR is the 64-bit WORD address!
 
 assign DDRAM_DIN = o_dataMem;				// Note: DDRAM_DIN is 64-bit.
+
 assign DDRAM_BE  = o_byteEnableMem;		// Note: DDRAM_BE has 8 bits, and the bits are active-High.
+//assign DDRAM_BE  = {o_byteEnableMem[0], o_byteEnableMem[1], o_byteEnableMem[2], o_byteEnableMem[3],
+//						  o_byteEnableMem[4], o_byteEnableMem[5], o_byteEnableMem[6], o_byteEnableMem[7]};
+
 assign DDRAM_WE  = o_writeEnableMem;
 assign DDRAM_RD  = o_readEnableMem;
 

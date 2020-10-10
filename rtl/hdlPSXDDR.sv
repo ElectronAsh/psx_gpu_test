@@ -171,10 +171,16 @@ parameter	CMD_32BYTE		= 2'd1,
 		end
 		
 		// Set Mask (we don't check isWrite to simplify logic but dataMask is used only with Write)
-		if (i_commandSize == CMD_4BYTE) begin
-			dataMask   = { 12'd0, i_subAddr[0] ? 4'hC : 4'h3 };
-		end else begin
-			dataMask   = i_writeMask; // 32 byte. (8 Byte WRITE NEVER HAPPEN DONT CARE)
+		if ((currState == DEFAULT_STATE) && i_command) begin
+			if (i_writeElseRead) begin
+				if (i_commandSize == CMD_4BYTE) begin
+					dataMask   = { 12'd0, i_subAddr[0] ? 4'hC : 4'h3 };
+				end else begin
+					dataMask   = i_writeMask; // 32 byte. (8 Byte WRITE NEVER HAPPEN DONT CARE)
+				end
+			end else begin
+				dataMask = 16'hFFFF;
+			end
 		end
 		
 		// Write to the correct section when we read data.
@@ -250,18 +256,13 @@ parameter	CMD_32BYTE		= 2'd1,
 	reg [7:0] mask;
 	always @(*)
 	begin
-		// During the whole read transaction(including cycle 0 where data is not loaded yet, mask is TRUE for all byte)
-		if (!isWrite || (i_command && !i_writeElseRead)) begin
-			mask = 8'hFF;
-		end else begin
-			case (blkCounter)
-			// Handle the case of reformatting the data to 32 bit on an odd adr.
-			2'd0   : mask = { dataMask[ 3],dataMask[ 3],dataMask[ 2],dataMask[ 2],dataMask[ 1],dataMask[ 1],dataMask[ 0],dataMask[ 0] };
-			2'd1   : mask = { dataMask[ 7],dataMask[ 7],dataMask[ 6],dataMask[ 6],dataMask[ 5],dataMask[ 5],dataMask[ 4],dataMask[ 4] };
-			2'd2   : mask = { dataMask[11],dataMask[11],dataMask[10],dataMask[10],dataMask[ 9],dataMask[ 9],dataMask[ 8],dataMask[ 8] };
-			default: mask = { dataMask[15],dataMask[15],dataMask[14],dataMask[14],dataMask[13],dataMask[13],dataMask[12],dataMask[12] };
-			endcase
-		end
+		case (blkCounter)
+		// Handle the case of reformatting the data to 32 bit on an odd adr.
+		2'd0   : mask = { dataMask[ 3],dataMask[ 3],dataMask[ 2],dataMask[ 2],dataMask[ 1],dataMask[ 1],dataMask[ 0],dataMask[ 0] };
+		2'd1   : mask = { dataMask[ 7],dataMask[ 7],dataMask[ 6],dataMask[ 6],dataMask[ 5],dataMask[ 5],dataMask[ 4],dataMask[ 4] };
+		2'd2   : mask = { dataMask[11],dataMask[11],dataMask[10],dataMask[10],dataMask[ 9],dataMask[ 9],dataMask[ 8],dataMask[ 8] };
+		default: mask = { dataMask[15],dataMask[15],dataMask[14],dataMask[14],dataMask[13],dataMask[13],dataMask[12],dataMask[12] };
+		endcase
 	end
 	assign o_byteEnableMem = mask;
 endmodule
