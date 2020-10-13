@@ -250,11 +250,11 @@ parameter	MEM_CMD_PIXEL2VRAM	= 3'b001,
             // Other command to come later...
             MEM_CMD_NONE		= 3'b000;
 
-wire isFifoFullLSB, isFifoFullMSB,isFifoEmptyLSB, isFifoEmptyMSB;
-wire isINFifoFull;
-wire isFifoEmpty32;
-wire isFifoNotEmpty32;
-wire rstInFIFO;
+(*keep*) wire isFifoFullLSB, isFifoFullMSB,isFifoEmptyLSB, isFifoEmptyMSB;
+(*keep*) wire isINFifoFull;
+(*keep*) wire isFifoEmpty32;
+(*keep*) wire isFifoNotEmpty32;
+(*keep*) wire rstInFIFO;
 
 // ----------------------------- Parsing Stage -----------------------------------
 reg signed [10:0] GPU_REG_OFFSETX;
@@ -571,9 +571,13 @@ begin
     end
 end
 assign mydebugCnt =rdebugCnt;
-assign dbg_canWrite = isINFifoFull;
+assign dbg_canWrite = !isINFifoFull;
 
 // ---------------------------------------------
+
+// [FIFO Signal for the VRAM Read to CPU]
+wire outFIFO_empty;
+wire outFIFO_full;
 
 wire writeFifo		= (!gpuAdrA2 & gpuSel & write) || (DMA_ACK && (GPU_REG_DMADirection == DMA_CPUtoGP0));
 wire writeGP1		=  gpuAdrA2 & gpuSel & write;
@@ -602,6 +606,8 @@ always @(posedge clk) begin
 		pReadFifoOut = outFIFO_read;
     end
 end
+
+wire [31:0] outFIFO_readV;
 
 //---------------------------------------------------------------
 //  Handling READ including pipelined latency for read result.
@@ -643,10 +649,10 @@ assign validDataOut = pDataOutValid;
 assign IRQRequest = GPU_REG_IRQSet;
 
 (*keep*) wire [31:0] fifoDataOut;
-(*keep*) assign isINFifoFull     = isFifoFullLSB  | isFifoFullMSB;
-(*keep*) assign isFifoEmpty32    = isFifoEmptyLSB | isFifoEmptyMSB;
-(*keep*) assign isFifoNotEmpty32 = !isFifoEmpty32;
-(*keep*) assign rstInFIFO      = rstGPU | rstCmd;
+assign isINFifoFull     = isFifoFullLSB  | isFifoFullMSB;
+assign isFifoEmpty32    = isFifoEmptyLSB | isFifoEmptyMSB;
+assign isFifoNotEmpty32 = !isFifoEmpty32;
+assign rstInFIFO        = rstGPU | rstCmd;
 
 (*keep*) wire readLFifo, readMFifo;
 (*keep*) wire readFifoLSB	= readFifo | readLFifo;
@@ -1668,11 +1674,6 @@ begin
 	pipeToFIFOOut = pushNextCycle;
 end
 
-wire [31:0] outFIFO_readV;
-
-wire outFIFO_empty;
-wire outFIFO_full;
-
 SSCfifo
 #(
     .DEPTH_WIDTH	(2),
@@ -1694,6 +1695,9 @@ FifoPixOut_inst
 );
 
 //--------------------------------------------------------------------
+
+wire signed [21:0]	DET;
+wire isValidHorizontalTriBbox;
 
 always @(*)
 begin
@@ -2827,7 +2831,6 @@ wire authorizeNextState     = ((!nextCondUseFIFO) | readFifo);
 assign nextState			= authorizeNextState ? nextLogicalState : currState;
 assign issuePrimitiveReal	= canIssueWork ? /*issue.*/issuePrimitive : NO_ISSUE;
 
-
 StencilCache StencilCacheInstance(
     .clk					(clk),
 
@@ -2995,7 +2998,7 @@ begin
     if (FifoDataValid) begin
         if (isV0 & /*issue.*/loadVertices) RegX0 = fifoDataOutX;
         if (isV0 & /*issue.*/loadVertices) RegY0 = fifoDataOutY;
-        if (isV0 & /*issue.*/loadUV	   ) RegU0 = fifoDataOutUR;
+        if (isV0 & /*issue.*/loadUV	     ) RegU0 = fifoDataOutUR;
         if (isV0 & /*issue.*/loadUV      ) RegV0 = fifoDataOutVG;
         if ((isV0|/*issue.*/loadAllRGB) & /*issue.*/loadRGB) begin
             RegR0 = loadComponentR;
@@ -3114,7 +3117,7 @@ assign				isRightPLXmaxTri= LPixelX <= maxTriDAX1; // PIXEL IS INCLUSIVE
 wire				isRightPRXmaxTri= RPixelX <= maxTriDAX1; // PIXEL IS INCLUSIVE
 
 wire				isValidHorizontal			= isTopInside     & isBottomInside;
-wire				isValidHorizontalTriBbox	= isTopInsideBBox & isBottomInsideBBox;
+assign				isValidHorizontalTriBbox	= isTopInsideBBox & isBottomInsideBBox;
 
 // Test Current Pixel For Line primitive : Check vertically against the DRAW AREA and select the pixel in the PAIR (odd/even) that match the result of the pixel we want to test.
 assign				isLineRightPix			= ( pixelX[0] & isLeftPRXInside & isRightPRXInside);
@@ -3197,20 +3200,20 @@ assign				nextD      = DLine + incrD;
 
 // ----
 // [Setup] AT Register Loading.
-wire signed [11:0]	a		= bIsLineCommand ?    d : preA;
-wire signed [11:0]	b		= bIsLineCommand ? negc : preB;
-wire signed [11:0]	negb	= -b;
-wire signed [11:0]	nega	= -a;
+(*keep*) wire signed [11:0]	a		= bIsLineCommand ?    d : preA;
+(*keep*) wire signed [11:0]	b		= bIsLineCommand ? negc : preB;
+(*keep*) wire signed [11:0]	negb	= -b;
+(*keep*) wire signed [11:0]	nega	= -a;
 
-wire signed [21:0]	DETP1	= a*d;
-wire signed [21:0]	DETP2	= b*negc;			// -b*c -> b*negc
-wire signed [21:0]	DET		= DETP1 + DETP2;	// Same as (a*d) - (b*c)
+(*keep*) wire signed [21:0]	DETP1	= a*d;
+(*keep*) wire signed [21:0]	DETP2	= b*negc;			// -b*c -> b*negc
+assign				DET		= DETP1 + DETP2;	// Same as (a*d) - (b*c)
 
-reg signed [11:0]	mulFA,mulFB;
-reg  signed [8:0]	v0C,v1C,v2C;
+(*noprune*) reg signed [11:0]	mulFA,mulFB;
+(*noprune*) reg  signed [9:0]	v0C,v1C,v2C;
 
-reg [2:0] compoID2,compoID3,compoID4,compoID5,compoID6;
-reg       vecID2,vecID3,vecID4,vecID5,vecID6;
+(*noprune*) reg [2:0] compoID2,compoID3,compoID4,compoID5,compoID6;
+(*noprune*) reg       vecID2,vecID3,vecID4,vecID5,vecID6;
 always @(posedge clk)
 begin
     compoID6 = compoID5;
@@ -3229,11 +3232,11 @@ end
 always @(*)
 begin
     case (compoID)
-    default:	begin v0C = RegR0;           v1C = RegR1;           v2C = RegR2;           end
-    3'd2:		begin v0C = RegG0;           v1C = RegG1;           v2C = RegG2;           end
-    3'd3:		begin v0C = RegB0;           v1C = RegB1;           v2C = RegB2;           end
-    3'd4:		begin v0C = { 1'b0, RegU0 }; v1C = { 1'b0, RegU1 }; v2C = { 1'b0, RegU2 }; end
-    3'd5:		begin v0C = { 1'b0, RegV0 }; v1C = { 1'b0, RegV1 }; v2C = { 1'b0, RegV2 }; end
+    default:	begin v0C = { 1'b0, RegR0 }; v1C = { 1'b0, RegR1 }; v2C = { 1'b0, RegR2 }; end
+    3'd2:		begin v0C = { 1'b0, RegG0 }; v1C = { 1'b0, RegG1 }; v2C = { 1'b0, RegG2 }; end
+    3'd3:		begin v0C = { 1'b0, RegB0 }; v1C = { 1'b0, RegB1 }; v2C = { 1'b0, RegB2 }; end
+    3'd4:		begin v0C = { 2'b0, RegU0 }; v1C = { 2'b0, RegU1 }; v2C = { 2'b0, RegU2 }; end
+    3'd5:		begin v0C = { 2'b0, RegV0 }; v1C = { 2'b0, RegV1 }; v2C = { 2'b0, RegV2 }; end
     endcase
 
     if (vecID) begin
@@ -3242,18 +3245,18 @@ begin
         mulFA = d;   	mulFB = negb;
     end
 end
-wire signed [9:0]   negv0c  = -{ 1'b0 ,v0C };
-wire signed [9:0]	C20i	= bIsLineCommand ? 10'd0 : ({ 1'b0 ,v2C } + negv0c);
-wire signed [9:0]	C10i	=  { 1'b0 ,v1C } + negv0c; // -512..+511
+(*keep*) wire signed [10:0]  negv0c  = -{1'b0,v0C};
+(*keep*) wire signed [10:0]	C20i	= bIsLineCommand ? 11'd0 : ({ 1'b0 ,v2C } + negv0c);
+(*keep*) wire signed [10:0]	C10i	=  { 1'b0 ,v1C } + negv0c; // -512..+511
 
-wire signed [20:0] inputDivA	= mulFA * C20i; // -2048..+2047 x -512..+511 = Signed 21 bit.
-wire signed [20:0] inputDivB	= mulFB * C10i;
+(*keep*) wire signed [20:0] inputDivA	= mulFA * C20i; // -2048..+2047 x -512..+511 = Signed 21 bit.
+(*keep*) wire signed [20:0] inputDivB	= mulFB * C10i;
 
 // Signed 21 bit << 11 bit => 32 bit signed value.
-wire signed [31:0] inputDivAShft= { inputDivA, 11'b0 }; // PREC'd0
-wire signed [31:0] inputDivBShft= { inputDivB, 11'b0 };
-wire signed [PREC+8:0] outputA;
-wire signed [PREC+8:0] outputB;
+(*keep*) wire signed [31:0] inputDivAShft= { inputDivA, 11'b0 }; // PREC'd0
+(*keep*) wire signed [31:0] inputDivBShft= { inputDivB, 11'b0 };
+(*keep*) wire signed [PREC+8:0] outputA;
+(*keep*) wire signed [PREC+8:0] outputB;
 
 dividerWrapper instDivisorA(
     .clock			( clk ),
@@ -3363,7 +3366,7 @@ wire signed [PREC+8:0] offB = (distXV0*BSX) + (distYV0*BSY) + roundComp;
 wire signed [PREC+8:0] offU = (distXV0*USX) + (distYV0*USY) + roundComp;
 wire signed [PREC+8:0] offV = (distXV0*VSX) + (distYV0*VSY) + roundComp;
 
-wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC];
+wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC]; // TODO Here ?
 wire signed [8:0] pixGL = RegG0 + offG[PREC+8:PREC];
 wire signed [8:0] pixBL = RegB0 + offB[PREC+8:PREC];
 wire signed [7:0] pixUL = RegU0 + offU[PREC+7:PREC];
