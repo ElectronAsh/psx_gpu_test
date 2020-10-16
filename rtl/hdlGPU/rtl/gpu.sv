@@ -3359,29 +3359,29 @@ assign isCWInsideR  =  (w0R[EQUMSB] & w1R[EQUMSB] & w2R[EQUMSB]);
 //
 // [Component Interpolation Out]
 //
-wire signed [PREC+8:0] roundComp = { 9'd0, 1'b1, 10'd0}; // PRECM1'd0
-wire signed [PREC+8:0] offR = (distXV0*RSX) + (distYV0*RSY) + roundComp;
-wire signed [PREC+8:0] offG = (distXV0*GSX) + (distYV0*GSY) + roundComp;
-wire signed [PREC+8:0] offB = (distXV0*BSX) + (distYV0*BSY) + roundComp;
-wire signed [PREC+8:0] offU = (distXV0*USX) + (distYV0*USY) + roundComp;
-wire signed [PREC+8:0] offV = (distXV0*VSX) + (distYV0*VSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] roundComp = { 9'd0, 1'b1, 10'd0}; // PRECM1'd0
+(*keep*) wire signed [PREC+8:0] offR = (distXV0*RSX) + (distYV0*RSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offG = (distXV0*GSX) + (distYV0*GSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offB = (distXV0*BSX) + (distYV0*BSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offU = (distXV0*USX) + (distYV0*USY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offV = (distXV0*VSX) + (distYV0*VSY) + roundComp;
 
-wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC]; // TODO Here ?
-wire signed [8:0] pixGL = RegG0 + offG[PREC+8:PREC];
-wire signed [8:0] pixBL = RegB0 + offB[PREC+8:PREC];
-wire signed [7:0] pixUL = RegU0 + offU[PREC+7:PREC];
-wire signed [7:0] pixVL = RegV0 + offV[PREC+7:PREC];
+(*keep*) wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC]; // TODO Here ?
+(*keep*) wire signed [8:0] pixGL = RegG0 + offG[PREC+8:PREC];
+(*keep*) wire signed [8:0] pixBL = RegB0 + offB[PREC+8:PREC];
+(*keep*) wire signed [7:0] pixUL = RegU0 + offU[PREC+7:PREC];
+(*keep*) wire signed [7:0] pixVL = RegV0 + offV[PREC+7:PREC];
 
-wire signed [PREC+8:0] offRR = offR + RSX;
-wire signed [PREC+8:0] offGR = offG + GSX;
-wire signed [PREC+8:0] offBR = offB + BSX;
-wire signed [PREC+8:0] offUR = offU + USX;
-wire signed [PREC+8:0] offVR = offV + VSX;
-wire signed [8:0] pixRR = RegR0 + offRR[PREC+8:PREC];
-wire signed [8:0] pixGR = RegG0 + offGR[PREC+8:PREC];
-wire signed [8:0] pixBR = RegB0 + offBR[PREC+8:PREC];
-wire signed [7:0] pixUR = RegU0 + offUR[PREC+7:PREC];
-wire signed [7:0] pixVR = RegV0 + offVR[PREC+7:PREC];
+(*keep*) wire signed [PREC+8:0] offRR = offR + RSX;
+(*keep*) wire signed [PREC+8:0] offGR = offG + GSX;
+(*keep*) wire signed [PREC+8:0] offBR = offB + BSX;
+(*keep*) wire signed [PREC+8:0] offUR = offU + USX;
+(*keep*) wire signed [PREC+8:0] offVR = offV + VSX;
+(*keep*) wire signed [8:0] pixRR = RegR0 + offRR[PREC+8:PREC];
+(*keep*) wire signed [8:0] pixGR = RegG0 + offGR[PREC+8:PREC];
+(*keep*) wire signed [8:0] pixBR = RegB0 + offBR[PREC+8:PREC];
+(*keep*) wire signed [7:0] pixUR = RegU0 + offUR[PREC+7:PREC];
+(*keep*) wire signed [7:0] pixVR = RegV0 + offVR[PREC+7:PREC];
 
 
 /*

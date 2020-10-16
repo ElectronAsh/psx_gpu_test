@@ -189,12 +189,12 @@ wire reset = RESET | buttons[1] | status[0] | cart_download;
 
 `include "build_id.v"
 parameter CONF_STR = {
-    "SNES;;",
-    "FS,SFCSMCBIN;",
-    "-;",
+    "PS1;;",
+    "FS,CUE,Load PS1 BIN;",
+    "FS,EXE,Load PS1 EXE;",
+	 "-;",
     "OEF,Video Region,Auto,NTSC,PAL;",
     "O13,ROM Header,Auto,No Header,LoROM,HiROM,ExHiROM;",
-    "-;",
     "-;",
     "P1O9B,FB Zoom,1024x512,512x512,256x256,128x128;",
     "-;",
@@ -255,6 +255,7 @@ wire [24:0] ioctl_addr;
 wire [15:0] ioctl_dout;
 wire        ioctl_wr;
 wire  [7:0] ioctl_index;
+wire        ioctl_wait;
 
 wire [11:0] joy0,joy1,joy2,joy3,joy4;
 wire [24:0] ps2_mouse;
@@ -294,6 +295,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 	.ioctl_wr(ioctl_wr),
 	.ioctl_download(ioctl_download),
 	.ioctl_index(ioctl_index),
+	.ioctl_wait(ioctl_wait),
 
 	.sd_lba(sd_lba),
 	.sd_rd(sd_rd),
@@ -375,14 +377,6 @@ reg gpu_read;
 reg [31:0] cpuDataIn;
 wire [31:0] cpuDataOut;
 wire validDataOut;
-
-
-//.bridge_m0_burstcount( bridge_m0_burstcount ) ,	// input [6:0] bridge_m0_burstcount
-//.bridge_m0_writedata( bridge_m0_writedata ) ,	// input [31:0] bridge_m0_writedata
-//.bridge_m0_address( bridge_m0_address ) ,			// input [19:0] bridge_m0_address
-//.bridge_m0_write( bridge_m0_write ) ,				// input  bridge_m0_write
-//.bridge_m0_read( bridge_m0_read ) ,					// input  bridge_m0_read
-//.bridge_m0_byteenable( bridge_m0_byteenable ) ,	// input  bridge_m0_byteenable
 
 
 assign bridge_m0_clk = clk_sys;						// output  bridge_m0_clk
@@ -662,63 +656,6 @@ always @(posedge clk_sys) begin
 end
 
 /*
-////////////////////////////  CODES  ///////////////////////////////////
-
-reg [128:0] gg_code;
-wire gg_available;
-
-// Code layout:
-// {clock bit, code flags,     32'b address, 32'b compare, 32'b replace}
-//  128        127:96          95:64         63:32         31:0
-// Integer values are in BIG endian byte order, so it up to the loader
-// or generator of the code to re-arrange them correctly.
-
-always_ff @(posedge clk_sys) begin
-	gg_code[128] <= 0;
-
-	if (code_download & ioctl_wr) begin
-		case (ioctl_addr[3:0])
-			0:  gg_code[111:96]  <= ioctl_dout; // Flags Bottom Word
-			2:  gg_code[127:112] <= ioctl_dout; // Flags Top Word
-			4:  gg_code[79:64]   <= ioctl_dout; // Address Bottom Word
-			6:  gg_code[95:80]   <= ioctl_dout; // Address Top Word
-			8:  gg_code[47:32]   <= ioctl_dout; // Compare Bottom Word
-			10: gg_code[63:48]   <= ioctl_dout; // Compare top Word
-			12: gg_code[15:0]    <= ioctl_dout; // Replace Bottom Word
-			14: begin
-				gg_code[31:16]    <= ioctl_dout; // Replace Top Word
-				gg_code[128]      <= 1;          // Clock it in
-			end
-		endcase
-	end
-end
-
-////////////////////////////  MEMORY  ///////////////////////////////////
-
-reg [16:0] mem_fill_addr;
-reg clearing_ram = 0;
-always @(posedge clk_sys) begin
-	if(~old_downloading & cart_download)
-		clearing_ram <= 1'b1;
-
-	if (&mem_fill_addr) clearing_ram <= 0;
-
-	if (clearing_ram)
-		mem_fill_addr <= mem_fill_addr + 1'b1;
-	else
-		mem_fill_addr <= 0;
-end
-
-reg [7:0] wram_fill_data;
-always @* begin
-    case(status[22:21])
-        0: wram_fill_data = (mem_fill_addr[8] ^ mem_fill_addr[2]) ? 8'h66 : 8'h99;
-        1: wram_fill_data = (mem_fill_addr[9] ^ mem_fill_addr[0]) ? 8'hFF : 8'h00;
-        2: wram_fill_data = 8'h55;
-        3: wram_fill_data = 8'hFF;
-    endcase
-end
-
 wire[23:0] ROM_ADDR;
 wire       ROM_OE_N;
 wire       ROM_WORD;
@@ -738,95 +675,6 @@ sdram sdram
 	.word(cart_download | ROM_WORD),
 	.busy()
 );
-
-wire[16:0] WRAM_ADDR;
-wire       WRAM_CE_N;
-wire       WRAM_WE_N;
-wire [7:0] WRAM_Q, WRAM_D;
-dpram #(17)	wram
-(
-	.clock(clk_sys),
-	.address_a(WRAM_ADDR),
-	.data_a(WRAM_D),
-	.wren_a(~WRAM_CE_N & ~WRAM_WE_N),
-	.q_a(WRAM_Q),
-
-	// clear the RAM on loading
-	.address_b(mem_fill_addr[16:0]),
-	.data_b(wram_fill_data),
-	.wren_b(clearing_ram)
-);
-
-wire [15:0] VRAM1_ADDR;
-wire        VRAM1_WE_N;
-wire  [7:0] VRAM1_D, VRAM1_Q;
-dpram #(15)	vram1
-(
-	.clock(clk_sys),
-	.address_a(VRAM1_ADDR[14:0]),
-	.data_a(VRAM1_D),
-	.wren_a(~VRAM1_WE_N),
-	.q_a(VRAM1_Q),
-
-	// clear the RAM on loading
-	.address_b(mem_fill_addr[14:0]),
-	.wren_b(clearing_ram)
-);
-
-wire [15:0] VRAM2_ADDR;
-wire        VRAM2_WE_N;
-wire  [7:0] VRAM2_D, VRAM2_Q;
-dpram #(15) vram2
-(
-	.clock(clk_sys),
-	.address_a(VRAM2_ADDR[14:0]),
-	.data_a(VRAM2_D),
-	.wren_a(~VRAM2_WE_N),
-	.q_a(VRAM2_Q),
-
-	// clear the RAM on loading
-	.address_b(mem_fill_addr[14:0]),
-	.wren_b(clearing_ram)
-);
-
-wire [15:0] ARAM_ADDR;
-wire        ARAM_CE_N;
-wire        ARAM_WE_N;
-wire  [7:0] ARAM_Q, ARAM_D;
-dpram #(16) aram
-(
-	.clock(clk_sys),
-	.address_a(ARAM_ADDR),
-	.data_a(ARAM_D),
-	.wren_a(~ARAM_CE_N & ~ARAM_WE_N),
-	.q_A(ARAM_Q),
-
-	// clear the RAM on loading
-	.address_b(mem_fill_addr[15:0]),
-	.wren_b(clearing_ram)
-);
-
-localparam  BSRAM_BITS = 17; // 1Mbits
-wire [19:0] BSRAM_ADDR;
-wire        BSRAM_CE_N;
-wire        BSRAM_WE_N;
-wire  [7:0] BSRAM_Q, BSRAM_D;
-dpram_dif #(BSRAM_BITS,8,BSRAM_BITS-1,16) bsram 
-(
-	.clock(clk_sys),
-
-	//Thrash the BSRAM upon ROM loading
-	.address_a(clearing_ram ? mem_fill_addr[BSRAM_BITS-1:0] : BSRAM_ADDR[BSRAM_BITS-1:0]),
-	.data_a(clearing_ram ? 8'hFF : BSRAM_D),
-	.wren_a(clearing_ram ? 1'b1 : ~BSRAM_CE_N & ~BSRAM_WE_N),
-	.q_a(BSRAM_Q),
-
-	.address_b({sd_lba[BSRAM_BITS-10:0],sd_buff_addr}),
-	.data_b(sd_buff_dout),
-	.wren_b(sd_buff_wr & sd_ack),
-	.q_b(sd_buff_din)
-);
-
 
 ////////////////////////////  VIDEO  ////////////////////////////////////
 
