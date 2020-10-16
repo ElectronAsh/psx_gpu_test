@@ -1,0 +1,77 @@
+Warning (10268): Verilog HDL information at PS1.sv(396): always construct contains both blocking and non-blocking assignments File: C:/psx_gpu_test_copy/PS1.sv Line: 396
+Info (10281): Verilog HDL Declaration information at PS1.sv(28): object "RESET" differs only in case from object "reset" in the same scope File: C:/psx_gpu_test_copy/PS1.sv Line: 28
+Info (10281): Verilog HDL Declaration information at PS1.sv(64): object "BUTTONS" differs only in case from object "buttons" in the same scope File: C:/psx_gpu_test_copy/PS1.sv Line: 64
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_router_002.sv(48): object "DEFAULT_WR_CHANNEL" differs only in case from object "default_wr_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_router_002.sv Line: 48
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_router_002.sv(49): object "DEFAULT_RD_CHANNEL" differs only in case from object "default_rd_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_router_002.sv Line: 49
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_router.sv(48): object "DEFAULT_WR_CHANNEL" differs only in case from object "default_wr_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_router.sv Line: 48
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_router.sv(49): object "DEFAULT_RD_CHANNEL" differs only in case from object "default_rd_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_router.sv Line: 49
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_mm_interconnect_0_router_001.sv(48): object "DEFAULT_WR_CHANNEL" differs only in case from object "default_wr_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_mm_interconnect_0_router_001.sv Line: 48
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_mm_interconnect_0_router_001.sv(49): object "DEFAULT_RD_CHANNEL" differs only in case from object "default_rd_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_mm_interconnect_0_router_001.sv Line: 49
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_mm_interconnect_0_router.sv(48): object "DEFAULT_WR_CHANNEL" differs only in case from object "default_wr_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_mm_interconnect_0_router.sv Line: 48
+Info (10281): Verilog HDL Declaration information at vip_mm_interconnect_0_mm_interconnect_0_router.sv(49): object "DEFAULT_RD_CHANNEL" differs only in case from object "default_rd_channel" in the same scope File: C:/psx_gpu_test_copy/rtl/submodules/vip_mm_interconnect_0_mm_interconnect_0_router.sv Line: 49
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(206): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 206
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(217): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 217
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(219): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 219
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(231): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 231
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(233): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 233
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(244): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 244
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(253): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 253
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(274): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 274
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(275): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 275
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(294): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 294
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(295): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 295
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(303): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 303
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(304): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 304
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(319): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 319
+Warning (10273): Verilog HDL warning at MemoryArbitratorFat.v(320): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 320
+Info (10281): Verilog HDL Declaration information at MemoryArbitratorFat.v(12): object "fifoFull" differs only in case from object "fifoFULL" in the same scope File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/MemoryArbitratorFat.v Line: 12
+Warning (10273): Verilog HDL warning at gpu.sv(693): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/gpu.sv Line: 693
+Warning (10273): Verilog HDL warning at gpu.sv(694): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/gpu.sv Line: 694
+Warning (10273): Verilog HDL warning at gpu.sv(695): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/gpu.sv Line: 695
+Warning (10273): Verilog HDL warning at gpu.sv(738): extended using "x" or "z" File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/gpu.sv Line: 738
+Warning (10268): Verilog HDL information at gpu.sv(968): always construct contains both blocking and non-blocking assignments File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/gpu.sv Line: 968
+Warning (10268): Verilog HDL information at gpu.sv(2995): always construct contains both blocking and non-blocking assignments File: C:/psx_gpu_test_copy/rtl/hdlGPU/rtl/gpu.sv Line: 2995
+Info (10281): Verilog HDL Declaration information at altera_pll_reconfig_core.v(112): object "LOCKED" differs only in case from object "locked" in the same scope File: C:/psx_gpu_test_copy/sys/pll_cfg/altera_pll_reconfig_core.v Line: 112
+Info (10281): Verilog HDL Declaration information at altera_pll_reconfig_core.v(1901): object "dps_done" differs only in case from object "DPS_DONE" in the same scope File: C:/psx_gpu_test_copy/sys/pll_cfg/altera_pll_reconfig_core.v Line: 1901
+Info (10281): Verilog HDL Declaration information at altera_pll_reconfig_core.v(1893): object "dps_changed" differs only in case from object "DPS_CHANGED" in the same scope File: C:/psx_gpu_test_copy/sys/pll_cfg/altera_pll_reconfig_core.v Line: 1893
+Info (10281): Verilog HDL Declaration information at sys_top.v(148): object "sd_miso" differs only in case from object "SD_MISO" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 148
+Info (10281): Verilog HDL Declaration information at sys_top.v(105): object "BTN_USER" differs only in case from object "btn_user" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 105
+Info (10281): Verilog HDL Declaration information at sys_top.v(106): object "BTN_OSD" differs only in case from object "btn_osd" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 106
+Info (10281): Verilog HDL Declaration information at sys_top.v(50): object "HDMI_TX_CLK" differs only in case from object "hdmi_tx_clk" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 50
+Info (10281): Verilog HDL Declaration information at sys_top.v(92): object "AUDIO_L" differs only in case from object "audio_l" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 92
+Info (10281): Verilog HDL Declaration information at sys_top.v(93): object "AUDIO_R" differs only in case from object "audio_r" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 93
+Info (10281): Verilog HDL Declaration information at sys_top.v(102): object "LED_USER" differs only in case from object "led_user" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 102
+Info (10281): Verilog HDL Declaration information at sys_top.v(104): object "LED_POWER" differs only in case from object "led_power" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 104
+Info (10281): Verilog HDL Declaration information at sys_top.v(793): object "FB_EN" differs only in case from object "fb_en" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 793
+Info (10281): Verilog HDL Declaration information at sys_top.v(794): object "FB_FMT" differs only in case from object "fb_fmt" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 794
+Info (10281): Verilog HDL Declaration information at sys_top.v(795): object "FB_WIDTH" differs only in case from object "fb_width" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 795
+Info (10281): Verilog HDL Declaration information at sys_top.v(796): object "FB_HEIGHT" differs only in case from object "fb_height" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 796
+Info (10281): Verilog HDL Declaration information at sys_top.v(797): object "FB_BASE" differs only in case from object "fb_base" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 797
+Info (10281): Verilog HDL Declaration information at sys_top.v(798): object "FB_STRIDE" differs only in case from object "fb_stride" in the same scope File: C:/psx_gpu_test_copy/sys/sys_top.v Line: 798
+Info (10281): Verilog HDL Declaration information at hq2x.sv(304): object "A" differs only in case from object "a" in the same scope File: C:/psx_gpu_test_copy/sys/hq2x.sv Line: 304
+Info (10281): Verilog HDL Declaration information at hq2x.sv(305): object "B" differs only in case from object "b" in the same scope File: C:/psx_gpu_test_copy/sys/hq2x.sv Line: 305
+Info (10281): Verilog HDL Declaration information at hq2x.sv(306): object "D" differs only in case from object "d" in the same scope File: C:/psx_gpu_test_copy/sys/hq2x.sv Line: 306
+Info (10281): Verilog HDL Declaration information at hq2x.sv(303): object "E" differs only in case from object "e" in the same scope File: C:/psx_gpu_test_copy/sys/hq2x.sv Line: 303
+Info (10281): Verilog HDL Declaration information at hq2x.sv(308): object "H" differs only in case from object "h" in the same scope File: C:/psx_gpu_test_copy/sys/hq2x.sv Line: 308
+Info (10281): Verilog HDL Declaration information at hq2x.sv(307): object "F" differs only in case from object "f" in the same scope File: C:/psx_gpu_test_copy/sys/hq2x.sv Line: 307
+Info (10281): Verilog HDL Declaration information at scandoubler.v(29): object "hq2x" differs only in case from object "Hq2x" in the same scope File: C:/psx_gpu_test_copy/sys/scandoubler.v Line: 29
+Warning (10720): Verilog HDL or VHDL warning at sys/video_mixer.sv(22): MESSAGE_ON or MESSAGE_OFF directive cannot process the non-HDL message ID 12161. File: C:/psx_gpu_test_copy/sys/video_mixer.sv Line: 22
+Info (10281): Verilog HDL Declaration information at arcade_video.v(31): object "clk_video" differs only in case from object "CLK_VIDEO" in the same scope File: C:/psx_gpu_test_copy/sys/arcade_video.v Line: 31
+Warning (12161): Node "emu:emu|hps_io:hps_io|gamma_bus[21]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 154
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[9]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[8]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[7]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[6]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[5]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[4]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[3]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[32]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[2]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[1]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[15]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[14]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[13]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[12]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[11]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[10]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158
+Warning (12161): Node "emu:emu|hps_io:hps_io|EXT_BUS[0]" is stuck at GND because node is in wire loop and does not have a source File: C:/psx_gpu_test_copy/sys/hps_io.v Line: 158

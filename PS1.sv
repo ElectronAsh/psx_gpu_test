@@ -549,45 +549,6 @@ wire o_busyClient;
 wire o_dataValidClient;
 wire [255:0] o_dataClient;
 
-/*
-PSX_DDR_Interface PSX_DDR_Interface_inst
-(
-	.i_clk( clk_sys ) ,						// input  i_clk
-	.i_rst( !reset ) ,						// input  i_rst
-	
-	.i_command(i_command) ,					// input  i_command
-	.i_writeElseRead(i_writeElseRead) ,	// input  i_writeElseRead
-	.i_commandSize(i_commandSize) ,		// input [1:0] i_commandSize
-	.i_targetAddr(i_targetAddr) ,			// input [14:0] i_targetAddr
-	.i_subAddr(i_subAddr) ,					// input [2:0] i_subAddr
-	.i_writeMask(i_writeMask) ,			// input [15:0] i_writeMask
-	.i_dataClient(i_dataClient) ,			// input [255:0] i_dataClient
-	.o_busyClient(o_busyClient) ,			// output  o_busyClient
-	.o_dataValidClient(o_dataValidClient) ,	// output  o_dataValidClient
-	.o_dataClient(o_dataClient) ,			// output [255:0] o_dataClient
-	
-	.i_busyMem(i_busyMem) ,					// input  i_busyMem
-	.i_dataValidMem(i_dataValidMem) ,	// input  i_dataValidMem
-	.i_dataMem(i_dataMem) ,					// input [31:0] i_dataMem
-	.o_writeEnableMem(o_writeEnableMem) ,	// output  o_writeEnableMem
-	.o_readEnableMem(o_readEnableMem) ,	// output  o_readEnableMem
-	.o_burstLength(o_burstLength) ,		// output [7:0] o_burstLength
-	.o_dataMem(o_dataMem) ,					// output [31:0] o_dataMem
-	.o_targetAddr(o_targetAddr) ,			// output [25:0] o_targetAddr
-	.o_byteEnableMem(o_byteEnableMem) 	// output [3:0] o_byteEnableMem
-);
-
-wire i_busyMem = DDRAM_BUSY;
-wire i_dataValidMem = DDRAM_DOUT_READY;
-wire [31:0] i_dataMem = DDRAM_DOUT[31:0];	// Note: DDRAM_DOUT is 64-bit.
-wire o_writeEnableMem;
-wire o_readEnableMem;
-wire [7:0] o_burstLength;
-wire [31:0] o_dataMem;
-wire [25:0] o_targetAddr;
-wire [3:0] o_byteEnableMem;
-*/
-
 
 hdlPSXDDR hdlPSXDDR_inst
 (
