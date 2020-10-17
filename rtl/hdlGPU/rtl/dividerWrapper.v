@@ -26,27 +26,13 @@ module dividerWrapper(
 `else
 	wire signed [21:0] remain_sig;
 	wire signed [31:0] quot;
-
-
-	div6	div6_inst (					// TESTING !!!!!!!!!!!!! Trying different pipeline latency values!!!!!!!!!!!
+	div6	div6_inst (
 		.clock ( clock ),
 		.denom ( denominator ),
 		.numer ( numerator ),
 		.quotient ( quot ),
 		.remain ( remain_sig )
 	);
-
-
-	// laxer fix. 13/10/20...
-	/*
-	reg signed [19:0] pipeQuot;
-	always @(posedge clock) begin
-	  pipeQuot <= quot[19:0];
-	end
-	assign output20 = pipeQuot;
-	*/
-	
 	assign output20 = quot[19:0];
-	
 `endif
 endmodule

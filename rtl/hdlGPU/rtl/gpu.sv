@@ -250,11 +250,11 @@ parameter	MEM_CMD_PIXEL2VRAM	= 3'b001,
             // Other command to come later...
             MEM_CMD_NONE		= 3'b000;
 
-(*keep*) wire isFifoFullLSB, isFifoFullMSB,isFifoEmptyLSB, isFifoEmptyMSB;
-(*keep*) wire isINFifoFull;
-(*keep*) wire isFifoEmpty32;
-(*keep*) wire isFifoNotEmpty32;
-(*keep*) wire rstInFIFO;
+wire isFifoFullLSB, isFifoFullMSB,isFifoEmptyLSB, isFifoEmptyMSB;
+wire isINFifoFull;
+wire isFifoEmpty32;
+wire isFifoNotEmpty32;
+wire rstInFIFO;
 
 // ----------------------------- Parsing Stage -----------------------------------
 reg signed [10:0] GPU_REG_OFFSETX;
@@ -648,15 +648,15 @@ assign validDataOut = pDataOutValid;
 
 assign IRQRequest = GPU_REG_IRQSet;
 
-(*keep*) wire [31:0] fifoDataOut;
+wire [31:0] fifoDataOut;
 assign isINFifoFull     = isFifoFullLSB  | isFifoFullMSB;
 assign isFifoEmpty32    = isFifoEmptyLSB | isFifoEmptyMSB;
 assign isFifoNotEmpty32 = !isFifoEmpty32;
 assign rstInFIFO        = rstGPU | rstCmd;
 
-(*keep*) wire readLFifo, readMFifo;
-(*keep*) wire readFifoLSB	= readFifo | readLFifo;
-(*keep*) wire readFifoMSB	= readFifo | readMFifo;
+wire readLFifo, readMFifo;
+wire readFifoLSB	= readFifo | readLFifo;
+wire readFifoMSB	= readFifo | readMFifo;
 
 wire [55:0] memoryWriteCommand;
 
@@ -698,8 +698,8 @@ begin
                                             , 1'dx
                                             };
     // CPU 2 VRAM : [16,16,2,15,...]
-    MEM_CMD_PIXEL2VRAM:    parameters = 	{ { WRPixelL15 , LPixel[14:0] }									// [55:40] LEFT PIXEL
-                                            , { WRPixelR15 , RPixel[14:0] }									// [39:24] RIGHT PIXEL !!!! (REVERSED CONVENTION !!!)
+    MEM_CMD_PIXEL2VRAM:    parameters = 	{ { WRPixelR15 , RPixel[14:0] }									// [55:40] RIGHT PIXEL
+                                            , { WRPixelL15 , LPixel[14:0] }									// [39:24] LEFT PIXEL
                                             , cmd1ValidR, cmd1ValidL										// [23:22]
                                             , { scrY[8:0], pixelX[9:4] }									// [21: 7]
                                             , pixelX[3:1]													// [ 6: 4]
@@ -3200,20 +3200,20 @@ assign				nextD      = DLine + incrD;
 
 // ----
 // [Setup] AT Register Loading.
-(*keep*) wire signed [11:0]	a		= bIsLineCommand ?    d : preA;
-(*keep*) wire signed [11:0]	b		= bIsLineCommand ? negc : preB;
-(*keep*) wire signed [11:0]	negb	= -b;
-(*keep*) wire signed [11:0]	nega	= -a;
+wire signed [11:0]	a		= bIsLineCommand ?    d : preA;
+wire signed [11:0]	b		= bIsLineCommand ? negc : preB;
+wire signed [11:0]	negb	= -b;
+wire signed [11:0]	nega	= -a;
 
-(*keep*) wire signed [21:0]	DETP1	= a*d;
-(*keep*) wire signed [21:0]	DETP2	= b*negc;			// -b*c -> b*negc
+wire signed [21:0]	DETP1	= a*d;
+wire signed [21:0]	DETP2	= b*negc;			// -b*c -> b*negc
 assign				DET		= DETP1 + DETP2;	// Same as (a*d) - (b*c)
 
-(*noprune*) reg signed [11:0]	mulFA,mulFB;
-(*noprune*) reg  signed [9:0]	v0C,v1C,v2C;
+reg signed [11:0]	mulFA,mulFB;
+reg  signed [9:0]	v0C,v1C,v2C;
 
-(*noprune*) reg [2:0] compoID2,compoID3,compoID4,compoID5,compoID6;
-(*noprune*) reg       vecID2,vecID3,vecID4,vecID5,vecID6;
+reg [2:0] compoID2,compoID3,compoID4,compoID5,compoID6;
+reg       vecID2,vecID3,vecID4,vecID5,vecID6;
 always @(posedge clk)
 begin
     compoID6 = compoID5;
@@ -3245,18 +3245,18 @@ begin
         mulFA = d;   	mulFB = negb;
     end
 end
-(*keep*) wire signed [10:0]  negv0c  = -{1'b0,v0C};
-(*keep*) wire signed [10:0]	C20i	= bIsLineCommand ? 11'd0 : ({ 1'b0 ,v2C } + negv0c);
-(*keep*) wire signed [10:0]	C10i	=  { 1'b0 ,v1C } + negv0c; // -512..+511
+wire signed [10:0]  negv0c  = -{1'b0,v0C};
+wire signed [10:0]	C20i	= bIsLineCommand ? 11'd0 : ({ 1'b0 ,v2C } + negv0c);
+wire signed [10:0]	C10i	=  { 1'b0 ,v1C } + negv0c; // -512..+511
 
-(*keep*) wire signed [20:0] inputDivA	= mulFA * C20i; // -2048..+2047 x -512..+511 = Signed 21 bit.
-(*keep*) wire signed [20:0] inputDivB	= mulFB * C10i;
+wire signed [20:0] inputDivA	= mulFA * C20i; // -2048..+2047 x -512..+511 = Signed 21 bit.
+wire signed [20:0] inputDivB	= mulFB * C10i;
 
 // Signed 21 bit << 11 bit => 32 bit signed value.
-(*keep*) wire signed [31:0] inputDivAShft= { inputDivA, 11'b0 }; // PREC'd0
-(*keep*) wire signed [31:0] inputDivBShft= { inputDivB, 11'b0 };
-(*keep*) wire signed [PREC+8:0] outputA;
-(*keep*) wire signed [PREC+8:0] outputB;
+wire signed [31:0] inputDivAShft= { inputDivA, 11'b0 }; // PREC'd0
+wire signed [31:0] inputDivBShft= { inputDivB, 11'b0 };
+wire signed [PREC+8:0] outputA;
+wire signed [PREC+8:0] outputB;
 
 dividerWrapper instDivisorA(
     .clock			( clk ),
@@ -3359,29 +3359,29 @@ assign isCWInsideR  =  (w0R[EQUMSB] & w1R[EQUMSB] & w2R[EQUMSB]);
 //
 // [Component Interpolation Out]
 //
-(*keep*) wire signed [PREC+8:0] roundComp = { 9'd0, 1'b1, 10'd0}; // PRECM1'd0
-(*keep*) wire signed [PREC+8:0] offR = (distXV0*RSX) + (distYV0*RSY) + roundComp;
-(*keep*) wire signed [PREC+8:0] offG = (distXV0*GSX) + (distYV0*GSY) + roundComp;
-(*keep*) wire signed [PREC+8:0] offB = (distXV0*BSX) + (distYV0*BSY) + roundComp;
-(*keep*) wire signed [PREC+8:0] offU = (distXV0*USX) + (distYV0*USY) + roundComp;
-(*keep*) wire signed [PREC+8:0] offV = (distXV0*VSX) + (distYV0*VSY) + roundComp;
+wire signed [PREC+8:0] roundComp = { 9'd0, 1'b1, 10'd0}; // PRECM1'd0
+wire signed [PREC+8:0] offR = (distXV0*RSX) + (distYV0*RSY) + roundComp;
+wire signed [PREC+8:0] offG = (distXV0*GSX) + (distYV0*GSY) + roundComp;
+wire signed [PREC+8:0] offB = (distXV0*BSX) + (distYV0*BSY) + roundComp;
+wire signed [PREC+8:0] offU = (distXV0*USX) + (distYV0*USY) + roundComp;
+wire signed [PREC+8:0] offV = (distXV0*VSX) + (distYV0*VSY) + roundComp;
 
-(*keep*) wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC]; // TODO Here ?
-(*keep*) wire signed [8:0] pixGL = RegG0 + offG[PREC+8:PREC];
-(*keep*) wire signed [8:0] pixBL = RegB0 + offB[PREC+8:PREC];
-(*keep*) wire signed [7:0] pixUL = RegU0 + offU[PREC+7:PREC];
-(*keep*) wire signed [7:0] pixVL = RegV0 + offV[PREC+7:PREC];
+wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC]; // TODO Here ?
+wire signed [8:0] pixGL = RegG0 + offG[PREC+8:PREC];
+wire signed [8:0] pixBL = RegB0 + offB[PREC+8:PREC];
+wire signed [7:0] pixUL = RegU0 + offU[PREC+7:PREC];
+wire signed [7:0] pixVL = RegV0 + offV[PREC+7:PREC];
 
-(*keep*) wire signed [PREC+8:0] offRR = offR + RSX;
-(*keep*) wire signed [PREC+8:0] offGR = offG + GSX;
-(*keep*) wire signed [PREC+8:0] offBR = offB + BSX;
-(*keep*) wire signed [PREC+8:0] offUR = offU + USX;
-(*keep*) wire signed [PREC+8:0] offVR = offV + VSX;
-(*keep*) wire signed [8:0] pixRR = RegR0 + offRR[PREC+8:PREC];
-(*keep*) wire signed [8:0] pixGR = RegG0 + offGR[PREC+8:PREC];
-(*keep*) wire signed [8:0] pixBR = RegB0 + offBR[PREC+8:PREC];
-(*keep*) wire signed [7:0] pixUR = RegU0 + offUR[PREC+7:PREC];
-(*keep*) wire signed [7:0] pixVR = RegV0 + offVR[PREC+7:PREC];
+wire signed [PREC+8:0] offRR = offR + RSX;
+wire signed [PREC+8:0] offGR = offG + GSX;
+wire signed [PREC+8:0] offBR = offB + BSX;
+wire signed [PREC+8:0] offUR = offU + USX;
+wire signed [PREC+8:0] offVR = offV + VSX;
+wire signed [8:0] pixRR = RegR0 + offRR[PREC+8:PREC];
+wire signed [8:0] pixGR = RegG0 + offGR[PREC+8:PREC];
+wire signed [8:0] pixBR = RegB0 + offBR[PREC+8:PREC];
+wire signed [7:0] pixUR = RegU0 + offUR[PREC+7:PREC];
+wire signed [7:0] pixVR = RegV0 + offVR[PREC+7:PREC];
 
 
 /*
