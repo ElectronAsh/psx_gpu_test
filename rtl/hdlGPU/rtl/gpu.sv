@@ -250,11 +250,11 @@ parameter	MEM_CMD_PIXEL2VRAM	= 3'b001,
             // Other command to come later...
             MEM_CMD_NONE		= 3'b000;
 
-wire isFifoFullLSB, isFifoFullMSB,isFifoEmptyLSB, isFifoEmptyMSB;
-wire isINFifoFull;
-wire isFifoEmpty32;
-wire isFifoNotEmpty32;
-wire rstInFIFO;
+(*keep*) wire isFifoFullLSB, isFifoFullMSB,isFifoEmptyLSB, isFifoEmptyMSB;
+(*keep*) wire isINFifoFull;
+(*keep*) wire isFifoEmpty32;
+(*keep*) wire isFifoNotEmpty32;
+(*keep*) wire rstInFIFO;
 
 // ----------------------------- Parsing Stage -----------------------------------
 reg signed [10:0] GPU_REG_OFFSETX;
@@ -648,7 +648,7 @@ assign validDataOut = pDataOutValid;
 
 assign IRQRequest = GPU_REG_IRQSet;
 
-wire [31:0] fifoDataOut;
+(*keep*) wire [31:0] fifoDataOut;
 assign isINFifoFull     = isFifoFullLSB  | isFifoFullMSB;
 assign isFifoEmpty32    = isFifoEmptyLSB | isFifoEmptyMSB;
 assign isFifoNotEmpty32 = !isFifoEmpty32;
@@ -664,7 +664,7 @@ wire [55:0] memoryWriteCommand;
 
 reg  [52:0] parameters;
 assign memoryWriteCommand = { parameters, memoryCommand};
-// assign memoryWriteCommand_o = memoryWriteCommand;
+
 wire commandFIFOaccept = (1'b1 && !saveLoadOnGoing);  // TODO memory command FIFO acceptCommand to implement (well FIFO to implement)
 
 reg	swap;
@@ -1146,7 +1146,8 @@ wire bIsNop         		= (bIsBase0x & (!(bIsBase01 | bIsBase02 | bIsBase1F)))	// 
 wire bIsPolyOrRect  		= (bIsPolyCommand | bIsRectCommand);
 
 // Line are not textured
-wire bUseTexture    		= bIsPolyOrRect & command[2] & (!GPU_REG_TextureDisable); 										// Avoid texture fetching if we do LINE, Compute proper color for FILL.
+wire bUseTextureParser      = bIsPolyOrRect & command[2];
+wire bUseTexture    		= bUseTextureParser & (!GPU_REG_TextureDisable); 										// Avoid texture fetching if we do LINE, Compute proper color for FILL.
 wire bIgnoreColor   		= bUseTexture   & command[0];
 wire bSemiTransp    		= command[1];
 wire bIs4PointPoly  		= command[3] & bIsPolyCommand;
@@ -1525,6 +1526,8 @@ wire tstRightEqu2 = maxTriDAX1[0] ? w2R[EQUMSB] : w2L[EQUMSB];
 
 state_t currState,nextLogicalState;
 state_t nextState;
+
+wire bStateLeave = (currState != nextState);
 
 always @(posedge clk)
 begin
@@ -2074,7 +2077,10 @@ begin
         // -----------------------------
         stencilReadSig	= 1;
         copyCVMode		= 1;
-        if (commandFIFOaccept & canRead) begin
+		// Accept to process when :
+		// - Can write the memory transaction.
+		// - Has next data ready OR it is the LAST memory transaction.
+        if (commandFIFOaccept & (canRead | (lastPair & endVertical))) begin
             memoryCommand = MEM_CMD_PIXEL2VRAM;
             nextWorkState = COPYCV_COPY;
             writeStencil  = 1;
@@ -2669,20 +2675,20 @@ begin
             // Command original 27-28 Rect Size   (0=Var, 1=1x1, 2=8x8, 3=16x16) (Rectangle only)
             if (command[4:3]==2'd0) begin
                 nextCondUseFIFO		= 1;
-                nextLogicalState	= (bUseTexture) ? UV_LOAD : WIDTH_HEIGHT_STATE;
+                nextLogicalState	= (bUseTextureParser) ? UV_LOAD : WIDTH_HEIGHT_STATE;
             end else begin
-                if (bUseTexture) begin
+                if (bUseTextureParser) begin
                     nextCondUseFIFO		= 1;
                     nextLogicalState	= UV_LOAD;
                 end else begin
                     nextCondUseFIFO		= 0;
-                    /*issue.*/loadSize      = 1; /*issue.*/loadSizeParam = command[4:3];
+                    /*issue.*/loadSize  = 1; /*issue.*/loadSizeParam = command[4:3];
                     nextLogicalState	= WAIT_COMMAND_COMPLETE;
                     /*issue.*/issuePrimitive		= ISSUE_RECT;
                 end
             end
         end else begin
-            if (bUseTexture) begin
+            if (bUseTextureParser) begin
                 // Condition with 'FifoDataValid' necessary :
                 // => If not done, state machine skip the 4th vertex loading to load directly 4th texture without loading the coordinates. (fifo not valid as we waited for primitive to complete)
                 nextCondUseFIFO		= 1;
@@ -2742,7 +2748,9 @@ begin
         //
         // TRICKY DETAIL : When emitting multiple primitive, load the next vertex ONLY WHEN THE EMITTED COMMAND IS COMPLETED.
         //                 So we check (issuePrimitive == NO_ISSUE) when requesting next vertex.
-        /*issue.*/increaseVertexCounter	= FifoDataValid & (!bUseTexture);	// go to next vertex if do not need UVs, don't care if invalid vertex... cause no issues. PUSH NEW VERTEX ONLY IF NOT BUSY RENDERING.
+		
+		// WE INCREMENT COUNTER ONLY WHEN WE ARE SURE IT IS THE LAST CYCLE OF STATE.
+        /*issue.*/increaseVertexCounter	= bStateLeave /*& FifoDataValid*/ & (!bUseTextureParser);	// go to next vertex if do not need UVs, don't care if invalid vertex... cause no issues. PUSH NEW VERTEX ONLY IF NOT BUSY RENDERING.
         /*issue.*/loadVertices			= (!bIsMultiLineTerminator); // Check if not TERMINATOR + line + multiline, else vertices are valid.
         /*issue.*/loadRectEdge			= bIsRectCommand;	// Force to load, dont care, override by UV if set with UV or SIZE if variable.
     end
@@ -2750,7 +2758,8 @@ begin
     begin
         //
 
-        /*issue.*/increaseVertexCounter	= FifoDataValid & canIssueWork & (!bIsRectCommand);	// Increase vertex counter only when in POLY MODE (LINE never reach here, RECT is the only other)
+		// WE INCREMENT COUNTER ONLY WHEN WE ARE SURE IT IS THE LAST CYCLE OF STATE.
+        /*issue.*/increaseVertexCounter	= bStateLeave /* & FifoDataValid*/ & canIssueWork & (!bIsRectCommand);	// Increase vertex counter only when in POLY MODE (LINE never reach here, RECT is the only other)
         /*issue.*/loadUV				= canIssueWork;
         /*issue.*/loadClutPage			= FifoDataValid & isV0 & (!isPolyFinalVertex); // First entry is Clut info, avoid reset when quad.
         /*issue.*/loadTexPage			= isV1; // second entry is TexPage.
@@ -3359,29 +3368,29 @@ assign isCWInsideR  =  (w0R[EQUMSB] & w1R[EQUMSB] & w2R[EQUMSB]);
 //
 // [Component Interpolation Out]
 //
-wire signed [PREC+8:0] roundComp = { 9'd0, 1'b1, 10'd0}; // PRECM1'd0
-wire signed [PREC+8:0] offR = (distXV0*RSX) + (distYV0*RSY) + roundComp;
-wire signed [PREC+8:0] offG = (distXV0*GSX) + (distYV0*GSY) + roundComp;
-wire signed [PREC+8:0] offB = (distXV0*BSX) + (distYV0*BSY) + roundComp;
-wire signed [PREC+8:0] offU = (distXV0*USX) + (distYV0*USY) + roundComp;
-wire signed [PREC+8:0] offV = (distXV0*VSX) + (distYV0*VSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] roundComp = { 9'd0, 1'b1, 10'd0}; // PRECM1'd0
+(*keep*) wire signed [PREC+8:0] offR = (distXV0*RSX) + (distYV0*RSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offG = (distXV0*GSX) + (distYV0*GSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offB = (distXV0*BSX) + (distYV0*BSY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offU = (distXV0*USX) + (distYV0*USY) + roundComp;
+(*keep*) wire signed [PREC+8:0] offV = (distXV0*VSX) + (distYV0*VSY) + roundComp;
 
-wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC]; // TODO Here ?
-wire signed [8:0] pixGL = RegG0 + offG[PREC+8:PREC];
-wire signed [8:0] pixBL = RegB0 + offB[PREC+8:PREC];
-wire signed [7:0] pixUL = RegU0 + offU[PREC+7:PREC];
-wire signed [7:0] pixVL = RegV0 + offV[PREC+7:PREC];
+(*keep*) wire signed [8:0] pixRL = RegR0 + offR[PREC+8:PREC]; // TODO Here ?
+(*keep*) wire signed [8:0] pixGL = RegG0 + offG[PREC+8:PREC];
+(*keep*) wire signed [8:0] pixBL = RegB0 + offB[PREC+8:PREC];
+(*keep*) wire signed [7:0] pixUL = RegU0 + offU[PREC+7:PREC];
+(*keep*) wire signed [7:0] pixVL = RegV0 + offV[PREC+7:PREC];
 
-wire signed [PREC+8:0] offRR = offR + RSX;
-wire signed [PREC+8:0] offGR = offG + GSX;
-wire signed [PREC+8:0] offBR = offB + BSX;
-wire signed [PREC+8:0] offUR = offU + USX;
-wire signed [PREC+8:0] offVR = offV + VSX;
-wire signed [8:0] pixRR = RegR0 + offRR[PREC+8:PREC];
-wire signed [8:0] pixGR = RegG0 + offGR[PREC+8:PREC];
-wire signed [8:0] pixBR = RegB0 + offBR[PREC+8:PREC];
-wire signed [7:0] pixUR = RegU0 + offUR[PREC+7:PREC];
-wire signed [7:0] pixVR = RegV0 + offVR[PREC+7:PREC];
+(*keep*) wire signed [PREC+8:0] offRR = offR + RSX;
+(*keep*) wire signed [PREC+8:0] offGR = offG + GSX;
+(*keep*) wire signed [PREC+8:0] offBR = offB + BSX;
+(*keep*) wire signed [PREC+8:0] offUR = offU + USX;
+(*keep*) wire signed [PREC+8:0] offVR = offV + VSX;
+(*keep*) wire signed [8:0] pixRR = RegR0 + offRR[PREC+8:PREC];
+(*keep*) wire signed [8:0] pixGR = RegG0 + offGR[PREC+8:PREC];
+(*keep*) wire signed [8:0] pixBR = RegB0 + offBR[PREC+8:PREC];
+(*keep*) wire signed [7:0] pixUR = RegU0 + offUR[PREC+7:PREC];
+(*keep*) wire signed [7:0] pixVR = RegV0 + offVR[PREC+7:PREC];
 
 
 /*
@@ -3557,15 +3566,15 @@ MemoryArbitratorFat MemoryArbitratorInstance(
 	.readPairValue						(memReadPairValue),
 
     // -----------------------------------
-    // [Fake Memory SIDE]
+    // [Memory SIDE]
     // -----------------------------------
-	.o_command							(o_command		),        // 0 = do nothing, 1 Perform a read or write to memory.
-	.i_busy								(i_busy			),           // Memory busy 1 => can not use.
+	.o_command							(o_command		),    // 0 = do nothing, 1 Perform a read or write to memory.
+	.i_busy								(i_busy			),    // Memory busy 1 => can not use.
 	.o_commandSize						(o_commandSize	),    // 0 = 8 byte, 1 = 32 byte. (Support for write ?)
 
-	.o_write							(o_write		),          // 0=READ / 1=WRITE 
-	.o_adr								(o_adr			),            // 1 MB memory splitted into 32768 block of 32 byte.
-	.o_subadr							(o_subadr		),         // Block of 8 or 4 byte into a 32 byte block.
+	.o_write							(o_write		),    // 0=READ / 1=WRITE 
+	.o_adr								(o_adr			),    // 1 MB memory splitted into 32768 block of 32 byte.
+	.o_subadr							(o_subadr		),    // Block of 8 or 4 byte into a 32 byte block.
 	.o_writeMask						(o_writeMask	),
 
 	.i_dataIn							(i_dataIn		),
