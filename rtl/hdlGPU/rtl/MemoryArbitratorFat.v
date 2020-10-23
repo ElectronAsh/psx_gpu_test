@@ -91,7 +91,7 @@ module MemoryArbitratorFat(
 wire		doBGWork     = saveBGBlock[0] | saveBGBlock[1];
 wire		spikeBGBlock;
 reg			lastsaveBGBlock;
-always @(posedge gpuClk) begin lastsaveBGBlock = doBGWork; end
+always @(posedge gpuClk) begin lastsaveBGBlock <= doBGWork; end
 // --------------------------------------------------------------
 // PUBLIC SIGNAL IN DESIGN
 wire	isFirstBlockBlending	= ((saveBGBlock == 2'b01) & isBlending);
@@ -376,12 +376,12 @@ end
 always @(posedge gpuClk)
 begin
 	if (i_nRst == 0) begin
-		state = WAIT_CMD;
+		state <= WAIT_CMD;
 	end else begin
-		state = nextState;
+		state <= nextState;
 		
 		if (saveTexAdr) begin
-			backupTexAdr = adrTexRead;
+			backupTexAdr <= adrTexRead;
 		end
 	end
 end
@@ -389,9 +389,9 @@ end
 always @(posedge gpuClk)
 begin
 	if (state == WAIT_CMD) begin
-		idxCnt = 3'd0;
+		idxCnt <= 3'd0;
 	end else begin
-		idxCnt = idxCnt + {2'd0, ClutCacheWrite};
+		idxCnt <= idxCnt + {2'd0, ClutCacheWrite};
 	end
 end
 
@@ -480,34 +480,34 @@ wire [15:0] cmdMask = cmdExec[289:274];
 
 always @(posedge busClk) begin
 	if (i_nRst == 0) begin
-		waitRead	= 0;
-		loadVVBank	= 0;
-		bankID		= 0;
+		waitRead	<= 0;
+		loadVVBank	<= 0;
+		bankID		<= 0;
 	end else begin
 		// Send command and is READ COMMAND.
 		if (sendCommandToMemory && (!cmdExec[0])) begin
-			waitRead = 1;
+			waitRead <= 1;
 		end
 		
 		if (waitRead && resetWait) begin
-			waitRead	= 0;
-			loadVVBank	= 0;
+			waitRead	<= 0;
+			loadVVBank	<= 0;
 		end
 
 		// [Read BURST Command ONLY]
 		if (loadBank & !loadVVIndexW) begin
 			// Bank ID used only in READ (when result comes back)
-			bankID		= cmdExec[16];
-			loadVVBank	= 1;
+			bankID		<= cmdExec[16];
+			loadVVBank	<= 1;
 			if (cmdExec[16]) begin
-				maskBank[31:16] = cmdMask;	// Pixel Select Mask
+				maskBank[31:16] <= cmdMask;	// Pixel Select Mask
 				if (cmdExec[20]) begin				// Clear other bank ?
-					maskBank[15:0] = 16'd0;
+					maskBank[15:0] <= 16'd0;
 				end
 			end else begin
-				maskBank[15:0] = cmdMask;	// Pixel Select Mask
+				maskBank[15:0] <= cmdMask;	// Pixel Select Mask
 				if (cmdExec[20]) begin				// Clear other bank ?
-					maskBank[31:16] = 16'd0;
+					maskBank[31:16] <= 16'd0;
 				end
 			end
 		end
@@ -515,10 +515,10 @@ always @(posedge busClk) begin
 		// Mask Bank will clear for the NEXT READ/WRITE sequence.
 		if (clearBanksCheck) begin
 			if (cmdExec[20]) begin
-				maskBank[15: 0] = 16'd0;
+				maskBank[15: 0] <= 16'd0;
 			end
 			if (cmdExec[21]) begin
-				maskBank[31:16] = 16'd0;
+				maskBank[31:16] <= 16'd0;
 			end
 		end
 	end
@@ -527,9 +527,9 @@ end
 always @(posedge busClk) begin
 	if (waitRead && loadVVBank && i_dataInValid) begin
 		if (bankID) begin
-			vvReadCache[511:256] = i_dataIn;
+			vvReadCache[511:256] <= i_dataIn;
 		end else begin
-			vvReadCache[255:  0] = i_dataIn;
+			vvReadCache[255:  0] <= i_dataIn;
 		end
 	end
 end
@@ -570,7 +570,7 @@ end
 wire VV_GPU_ChkMsk		= cmdExec[18];
 wire VV_GPU_ForceMsk	= cmdExec[17];
 
-wire [255:0] currVVPixelWFinal		= { 
+(*keep*) wire [255:0] currVVPixelWFinal		= { 
 	VV_GPU_ForceMsk | storage[255], storage[254:240],
 	VV_GPU_ForceMsk | storage[239], storage[238:224],
 	VV_GPU_ForceMsk | storage[223], storage[222:208],

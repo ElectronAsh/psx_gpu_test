@@ -565,12 +565,12 @@ reg [31:0] rdebugCnt;
 always @(posedge clk)
 begin
     if (i_nrst == 0) begin
-        rdebugCnt = 32'd0;
+        rdebugCnt <= 32'd0;
     end else begin
-        rdebugCnt = rdebugCnt + 32'd1;
+        rdebugCnt <= rdebugCnt + 32'd1;
     end
 end
-assign mydebugCnt =rdebugCnt;
+assign mydebugCnt = rdebugCnt;
 assign dbg_canWrite = !isINFifoFull;
 
 // ---------------------------------------------
@@ -601,9 +601,9 @@ wire        outFIFO_read = (((GPU_REG_DMADirection == DMA_GP0toCPU) && DMA_ACK) 
 reg pReadFifoOut;
 always @(posedge clk) begin
     if (i_nrst == 0) begin
-        pReadFifoOut = 1'd0;
+        pReadFifoOut <= 1'd0;
     end else begin
-		pReadFifoOut = outFIFO_read;
+		pReadFifoOut <= outFIFO_read;
     end
 end
 
@@ -639,8 +639,8 @@ begin
 end
 
 always @(posedge clk) begin
-	pDataOut		= dataOut;
-	pDataOutValid	= dataOutValid;
+	pDataOut		<= dataOut;
+	pDataOutValid	<= dataOutValid;
 end
 assign cpuDataOut	= pDataOut;
 assign validDataOut = pDataOutValid;
@@ -968,7 +968,7 @@ wire [4:0]	nextClutPacket	= rClutPacketCount + 5'h1F;
 always @(posedge clk)
 begin
     if (getGPUInfo) begin
-        regGpuInfo = gpuInfoMux;
+        regGpuInfo <= gpuInfoMux;
     end
 
     if (rstGPU) begin
@@ -1169,19 +1169,19 @@ reg  rejectPrimitive;
 always @(posedge clk)
 begin
     if (rejectVertex | resetReject) begin
-        rejectPrimitive = !resetReject;
+        rejectPrimitive <= !resetReject;
     end
 end
 
 always @(posedge clk)
 begin
     if (/*issue.*/resetVertexCounter /* | rstGPU | rstCmd : Done by STATE RESET. */) begin
-        vertCnt			= 2'b00;
-        isFirstVertex	= 1;
+        vertCnt			<= 2'b00;
+        isFirstVertex	<= 1;
     end else begin
         vertCnt = vertCnt + /*issue.*/increaseVertexCounter;
         if (/*issue.*/increaseVertexCounter) begin
-            isFirstVertex	= 0;
+            isFirstVertex	<= 0;
         end
     end
 end
@@ -1286,8 +1286,8 @@ end
 
 always @(posedge clk)
 begin
-    counterXSrc = (resetXCounter) ? 7'd0 : counterXSrc + { 6'd0 ,incrementXCounter & (!useDest) };
-    counterXDst = (resetXCounter) ? 7'd0 : counterXDst + { 6'd0 ,incrementXCounter &   useDest  };
+    counterXSrc <= (resetXCounter) ? 7'd0 : counterXSrc + { 6'd0 ,incrementXCounter & (!useDest) };
+    counterXDst <= (resetXCounter) ? 7'd0 : counterXDst + { 6'd0 ,incrementXCounter &   useDest  };
 end
 
 reg  switchReadStoreBlock; // TODO this command will ALSO do loading the CACHE STENCIL locally (2x16 bit registers)
@@ -1381,17 +1381,17 @@ assign		doBlockWork 	= (differentBlock | (flagIsNewBlock==IS_NEW_BLOCK_IN_PRIMIT
 
 always @(posedge clk) begin
     if (writePixelL | writePixelR) begin
-        prevVRAMAdrBlock = currVRAMAdrBlock;
+        prevVRAMAdrBlock <= currVRAMAdrBlock;
     end
 
     // Give priority to SET over RESET, and ONLY when we write an EFFECTIVE PIXEL.
     if (setFirstPixel) begin
-        flagIsNewBlock = IS_NEW_BLOCK_IN_PRIMITIVE;
+        flagIsNewBlock <= IS_NEW_BLOCK_IN_PRIMITIVE;
     end else begin
         // [Inside the primitive, each time we emit a pixel]
         if (doBlockWork) begin
             if (flagIsNewBlock == IS_NEW_BLOCK_IN_PRIMITIVE) begin
-                flagIsNewBlock = IS_OTHER_BLOCK_IN_PRIMITIVE;
+                flagIsNewBlock <= IS_OTHER_BLOCK_IN_PRIMITIVE;
             end
         end
     end
@@ -1403,30 +1403,30 @@ reg  signed [13:0]  DLine;
 always @(posedge clk)
 begin
     if (loadNext) begin
-        pixelX = nextPixelX;
-        pixelY = nextPixelY;
+        pixelX <= nextPixelX;
+        pixelY <= nextPixelY;
     end
     if (resetDir) begin
-        dir    = 0; // Left to Right
+        dir    <= 0; // Left to Right
     end else begin
         if (switchDir) begin
-            dir = !dir;
+            dir <= !dir;
         end
     end
 
     if (currWorkState == LINE_START) begin
-        DLine = initialD;
+        DLine <= initialD;
     end else begin
         if (loadNext) begin
-            DLine = nextD;
+            DLine <= nextD;
         end
     end
 
     if (resetPixelFound) begin
-        pixelFound = 0; // No pixel found.
+        pixelFound <= 0; // No pixel found.
     end
     if (setPixelFound) begin
-        pixelFound = 1;
+        pixelFound <= 1;
     end
 	/* Early optimization removed.
     if (resetEnteredTriangle) begin
@@ -1438,41 +1438,41 @@ begin
 	*/
     if (memorizeLineEqu) begin
         // Backup the edge result for FIST PIXEL INSIDE BBOX.
-        memW0 = minTriDAX0[0] ? w0R[EQUMSB] : w0L[EQUMSB];
-        memW1 = minTriDAX0[0] ? w1R[EQUMSB] : w1L[EQUMSB];
-        memW2 = minTriDAX0[0] ? w2R[EQUMSB] : w2L[EQUMSB];
+        memW0 <= minTriDAX0[0] ? w0R[EQUMSB] : w0L[EQUMSB];
+        memW1 <= minTriDAX0[0] ? w1R[EQUMSB] : w1L[EQUMSB];
+        memW2 <= minTriDAX0[0] ? w2R[EQUMSB] : w2L[EQUMSB];
     end
 
     // BEFORE cpyBank UPDATE !!!
     if (storeStencilRead) begin
         if (cpyBank) begin
-            stencilReadCache[31:16] = stencilReadValue16;
-            maskReadCache	[31:16] = maskSegmentRead;
+            stencilReadCache[31:16] <= stencilReadValue16;
+            maskReadCache	[31:16] <= maskSegmentRead;
             if (clearOtherBank) begin
-                maskReadCache	[15:0] = 16'd0;
+                maskReadCache	[15:0] <= 16'd0;
             end
         end else begin
-            stencilReadCache[15: 0] = stencilReadValue16;
-            maskReadCache	[15: 0] = maskSegmentRead;
+            stencilReadCache[15: 0] <= stencilReadValue16;
+            maskReadCache	[15: 0] <= maskSegmentRead;
             if (clearOtherBank) begin
-                maskReadCache	[31:16] = 16'd0;
+                maskReadCache	[31:16] <= 16'd0;
             end
         end
     end
 
     if (clearBank0) begin // storeStencilRead is always False, no priority issues.
-        maskReadCache	[15: 0] = 16'd0;
+        maskReadCache	[15: 0] <= 16'd0;
     end
 
     if (clearBank1) begin // storeStencilRead is always False, no priority issues.
-        maskReadCache	[31:16] = 16'd0;
+        maskReadCache	[31:16] <= 16'd0;
     end
 
     // AFTER cpyBank is used !!!!
     if (resetBank) begin
-        cpyBank = 1'b0;
+        cpyBank <= 1'b0;
     end else begin
-        cpyBank = cpyBank ^ switchBank;
+        cpyBank <= cpyBank ^ switchBank;
     end
 
 end
@@ -1570,22 +1570,22 @@ reg readM;
 always @(posedge clk)
 begin
     if (setLastPair) begin
-        lastPair = 1'b1;
+        lastPair <= 1'b1;
     end
     if (resetLastPair) begin
-        lastPair = 1'b0;
+        lastPair <= 1'b0;
     end
     if (setSwap) begin
-        swap = RegX0[0];
+        swap <= RegX0[0];
     end else begin
-        swap = swap ^ changeSwap;
+        swap <= swap ^ changeSwap;
     end
     if (readL | readM) begin
-        regSaveM = readM;
-        regSaveL = readL;
+        regSaveM <= readM;
+        regSaveL <= readL;
     end
     if (setStencilMode!=3'd0) begin
-        stencilMode = setStencilMode;
+        stencilMode <= setStencilMode;
     end
 end
 wire isNewBlockPixel;
@@ -1660,21 +1660,21 @@ always @(posedge clk)
 begin
 	// A Part
 	case (aSelABDX)
-	/*SELA_A = */2'd0: pairPixelToCPU[15:0] = memReadPairValue[15:0];
-	/*SELA_B = */2'd1: pairPixelToCPU[15:0] = memReadPairValue[31:16];
-	/*SELA_D = */2'd2: pairPixelToCPU[15:0] = DPixelReg;
+	/*SELA_A = */2'd0: pairPixelToCPU[15:0] <= memReadPairValue[15:0];
+	/*SELA_B = */2'd1: pairPixelToCPU[15:0] <= memReadPairValue[31:16];
+	/*SELA_D = */2'd2: pairPixelToCPU[15:0] <= DPixelReg;
 	/*SELA__ = */2'd3: begin /*Nothing*/ end
 	endcase
 	
 	// B Part
 	if (wbSel) begin
-		pairPixelToCPU[31:16] = bSelAB ? memReadPairValue[31:16] : memReadPairValue[15:0];
+		pairPixelToCPU[31:16] <= bSelAB ? memReadPairValue[31:16] : memReadPairValue[15:0];
 	end
 	
 	if (memReadPairValid) begin
-		DPixelReg = memReadPairValue[31:16];
+		DPixelReg <= memReadPairValue[31:16];
 	end
-	pipeToFIFOOut = pushNextCycle;
+	pipeToFIFOOut <= pushNextCycle;
 end
 
 SSCfifo
@@ -3012,40 +3012,40 @@ always @(posedge clk)
 begin
     bPipeIssueTrianglePrimitive <= (issuePrimitiveReal == ISSUE_TRIANGLE);
     if (FifoDataValid) begin
-        if (isV0 & /*issue.*/loadVertices) RegX0 = fifoDataOutX;
-        if (isV0 & /*issue.*/loadVertices) RegY0 = fifoDataOutY;
-        if (isV0 & /*issue.*/loadUV	     ) RegU0 = fifoDataOutUR;
-        if (isV0 & /*issue.*/loadUV      ) RegV0 = fifoDataOutVG;
+        if (isV0 & /*issue.*/loadVertices) RegX0 <= fifoDataOutX;
+        if (isV0 & /*issue.*/loadVertices) RegY0 <= fifoDataOutY;
+        if (isV0 & /*issue.*/loadUV	     ) RegU0 <= fifoDataOutUR;
+        if (isV0 & /*issue.*/loadUV      ) RegV0 <= fifoDataOutVG;
         if ((isV0|/*issue.*/loadAllRGB) & /*issue.*/loadRGB) begin
-            RegR0 = loadComponentR;
-            RegG0 = loadComponentG;
-            RegB0 = loadComponentB;
+            RegR0 <= loadComponentR;
+            RegG0 <= loadComponentG;
+            RegB0 <= loadComponentB;
         end
 
-        if (isV1 & /*issue.*/loadVertices) RegX1 = fifoDataOutX;
-        if (isV1 & /*issue.*/loadVertices) RegY1 = fifoDataOutY;
+        if (isV1 & /*issue.*/loadVertices) RegX1 <= fifoDataOutX;
+        if (isV1 & /*issue.*/loadVertices) RegY1 <= fifoDataOutY;
         if (/*issue.*/loadRectEdge) begin
-            RegX1 = rightEdgeRect;
-            RegY1 = RegY0;
-            RegX2 = RegX0;
-            RegY2 = bottomEdgeRect;
+            RegX1 <= rightEdgeRect;
+            RegY1 <= RegY0;
+            RegX2 <= RegX0;
+            RegY2 <= bottomEdgeRect;
         end
-        if (isV1 & /*issue.*/loadUV) RegU1 = fifoDataOutUR;
-        if (isV1 & /*issue.*/loadUV) RegV1 = fifoDataOutVG;
+        if (isV1 & /*issue.*/loadUV) RegU1 <= fifoDataOutUR;
+        if (isV1 & /*issue.*/loadUV) RegV1 <= fifoDataOutVG;
         if ((isV1|/*issue.*/loadAllRGB) & /*issue.*/loadRGB) begin
-            RegR1 = loadComponentR;
-            RegG1 = loadComponentG;
-            RegB1 = loadComponentB;
+            RegR1 <= loadComponentR;
+            RegG1 <= loadComponentG;
+            RegB1 <= loadComponentB;
         end
 
-        if (isV2 & /*issue.*/loadVertices) RegX2 = fifoDataOutX;
-        if (isV2 & /*issue.*/loadVertices) RegY2 = fifoDataOutY;
-        if (isV2 & /*issue.*/loadUV      ) RegU2 = fifoDataOutUR;
-        if (isV2 & /*issue.*/loadUV      ) RegV2 = fifoDataOutVG;
+        if (isV2 & /*issue.*/loadVertices) RegX2 <= fifoDataOutX;
+        if (isV2 & /*issue.*/loadVertices) RegY2 <= fifoDataOutY;
+        if (isV2 & /*issue.*/loadUV      ) RegU2 <= fifoDataOutUR;
+        if (isV2 & /*issue.*/loadUV      ) RegV2 <= fifoDataOutVG;
         if ((isV2|/*issue.*/loadAllRGB) & /*issue.*/loadRGB) begin
-            RegR2 = loadComponentR;
-            RegG2 = loadComponentG;
-            RegB2 = loadComponentB;
+            RegR2 <= loadComponentR;
+            RegG2 <= loadComponentG;
+            RegB2 <= loadComponentB;
         end
 
 // [NOT USED FOR NOW : DIRECTLY MODIFY GLOBAL GPU STATE]
@@ -3053,19 +3053,19 @@ begin
 
     //	Better load and add W to RegX0,RegY0,RegX1=RegX0+W ? Same for Y1.
         if (/*issue.*/loadSize) begin
-            RegSizeW = widthNext;
-            RegSizeH = heightNext;
+            RegSizeW <= widthNext;
+            RegSizeH <= heightNext;
             if (writeOrigHeight) begin
-                OriginalRegSizeH = heightNext;
+                OriginalRegSizeH <= heightNext;
             end
         end
         if (/*issue.*/loadCoord1) begin
-            RegX0 = { 2'd0 , (bIsFillCommand) ? { fifoDataOutWidth[9:4], 4'b0} : fifoDataOutWidth};
-            RegY0 = { 3'd0 , fifoDataOutHeight };
+            RegX0 <= { 2'd0 , (bIsFillCommand) ? { fifoDataOutWidth[9:4], 4'b0} : fifoDataOutWidth};
+            RegY0 <= { 3'd0 , fifoDataOutHeight };
         end
         if (/*issue.*/loadCoord2) begin
-            RegX1 = { 2'd0 , fifoDataOutWidth  };
-            RegY1 = { 3'd0 , fifoDataOutHeight };
+            RegX1 <= { 2'd0 , fifoDataOutWidth  };
+            RegY1 <= { 3'd0 , fifoDataOutHeight };
         end
     end
 end
@@ -3232,17 +3232,17 @@ reg [2:0] compoID2,compoID3,compoID4,compoID5,compoID6;
 reg       vecID2,vecID3,vecID4,vecID5,vecID6;
 always @(posedge clk)
 begin
-    compoID6 = compoID5;
-    compoID5 = compoID4;
-    compoID4 = compoID3;
-    compoID3 = compoID2;
-    compoID2 = compoID;
+    compoID6 <= compoID5;
+    compoID5 <= compoID4;
+    compoID4 <= compoID3;
+    compoID3 <= compoID2;
+    compoID2 <= compoID;
 
-    vecID6   = vecID5;
-    vecID5   = vecID4;
-    vecID4   = vecID3;
-    vecID3   = vecID2;
-    vecID2   = vecID;
+    vecID6   <= vecID5;
+    vecID5   <= vecID4;
+    vecID4   <= vecID3;
+    vecID3   <= vecID2;
+    vecID2   <= vecID;
 end
 
 always @(*)
@@ -3298,28 +3298,28 @@ reg signed [PREC+8:0] RSX,RSY,GSX,GSY,BSX,BSY,USX,USY,VSX,VSY; // 1..10 Write, 0
 
 wire /*reg*/ [3:0]	assignDivResult = { compoID6, vecID6 }; // 1..A, 0 none
 always @(posedge clk) begin
-    if (assignDivResult == 4'd2) begin RSX = perPixelComponentIncrement; end
-    if (assignDivResult == 4'd3) begin RSY = perPixelComponentIncrement; end
-    if (assignDivResult == 4'd4) begin GSX = perPixelComponentIncrement; end
-    if (assignDivResult == 4'd5) begin GSY = perPixelComponentIncrement; end
-    if (assignDivResult == 4'd6) begin BSX = perPixelComponentIncrement; end
-    if (assignDivResult == 4'd7) begin BSY = perPixelComponentIncrement; end
-    if (assignDivResult == 4'd8) begin USX = perPixelComponentIncrement; end
-    if (assignDivResult == 4'd9) begin USY = perPixelComponentIncrement; end
-    if (assignDivResult == 4'hA) begin VSX = perPixelComponentIncrement; end
-    if (assignDivResult == 4'hB) begin VSY = perPixelComponentIncrement; end
+    if (assignDivResult == 4'd2) begin RSX <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'd3) begin RSY <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'd4) begin GSX <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'd5) begin GSY <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'd6) begin BSX <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'd7) begin BSY <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'd8) begin USX <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'd9) begin USY <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'hA) begin VSX <= perPixelComponentIncrement; end
+    if (assignDivResult == 4'hB) begin VSY <= perPixelComponentIncrement; end
     // Assign rasterization parameter for RECT mode.
     if (assignRectSetup) begin
-        RSX = ZERO_PREC;
-        RSY = ZERO_PREC;
-        GSX = ZERO_PREC;
-        GSY = ZERO_PREC;
-        BSX = ZERO_PREC;
-        BSY = ZERO_PREC;
-        USX = ONE_PREC;
-        USY = ZERO_PREC;
-        VSX = ZERO_PREC;
-        VSY = ONE_PREC;
+        RSX <= ZERO_PREC;
+        RSY <= ZERO_PREC;
+        GSX <= ZERO_PREC;
+        GSY <= ZERO_PREC;
+        BSX <= ZERO_PREC;
+        BSY <= ZERO_PREC;
+        USX <= ONE_PREC;
+        USY <= ZERO_PREC;
+        VSX <= ZERO_PREC;
+        VSY <= ONE_PREC;
     end
 end
 
@@ -3430,8 +3430,8 @@ reg lastSaveLoadOnGoing;
 reg lastMissTC;
 always @(posedge clk)
 begin
-    lastSaveLoadOnGoing = saveLoadOnGoing;
-    lastMissTC			= missTC;
+    lastSaveLoadOnGoing <= saveLoadOnGoing;
+    lastMissTC			<= missTC;
 end
 
 // wire notMemoryBusyCurrCycle;
