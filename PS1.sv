@@ -591,7 +591,9 @@ wire i_dataValidMem = DDRAM_DOUT_READY;
 
 // From the core TO the Altera DDR controller...
 assign DDRAM_CLK = clk_sys;
-assign DDRAM_BURSTCNT = o_burstLength;	// DDRAM_BURSTCNT is 8 bits.
+//assign DDRAM_BURSTCNT = o_burstLength;	// DDRAM_BURSTCNT is 8 bits.
+assign DDRAM_BURSTCNT = 1;	// DDRAM_BURSTCNT is 8 bits.
+
 
 // This should map the GPU Framebuffer at 0x10000000 in DDR (BYTE address!).
 assign DDRAM_ADDR = {9'b100000000, o_targetAddr[16:0]};	// Note: DDRAM_ADDR is the 64-bit WORD address!
