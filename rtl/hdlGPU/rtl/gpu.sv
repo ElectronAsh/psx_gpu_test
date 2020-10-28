@@ -2787,11 +2787,11 @@ begin
                 /*issue.*/issuePrimitive	= ISSUE_TRIANGLE;
             end
 
-            if (isPolyFinalVertex) begin // Is it the final vertex of the command ? (3rd / 4th depending on command)
+            if (/*isPolyFinalVertex*/increaseVertexCounter && isPolyFinalVertex) begin // Is it the final vertex of the command ? (3rd / 4th depending on command)
                 // Allow to complete UV LOAD of last vertex and go to COMPLETE
                 // only if we can push the triangle and that the incoming FIFO data is valid.
                 nextCondUseFIFO		= !(canIssueWork & FifoDataValid);	// Instead of FIFO state, it uses
-				nextLogicalState	=  canIssueWork ? WAIT_COMMAND_COMPLETE : UV_LOAD; // For now, no optimization of the state machine, FIFO data or not : DEFAULT_STATE.
+				nextLogicalState	=  (canIssueWork & FifoDataValid) ? WAIT_COMMAND_COMPLETE : UV_LOAD; // For now, no optimization of the state machine, FIFO data or not : DEFAULT_STATE.
             end else begin
 
                 //
