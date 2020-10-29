@@ -133,7 +133,15 @@ module emu
 	input   wire         bridge_m0_byteenable,
 	output  wire         bridge_m0_clk,
 	
-	output wire [2:0] FB_ZOOM
+	output wire [2:0] FB_ZOOM,
+	
+	input wire hdmi_vbl,
+	
+	output reg [11:0] my_fb_hsize,
+	output reg [11:0] my_fb_vsize,
+	output reg [5:0] my_fb_format,
+	output reg [31:0] my_fb_base,
+	output reg [13:0] my_fb_stride
 );
 
 assign FB_ZOOM = status[11:9];
@@ -186,7 +194,6 @@ wire reset = RESET | buttons[1] | status[0] | cart_download;
 // 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 
 
-
 `include "build_id.v"
 parameter CONF_STR = {
     "PS1 (Laxer3a);;",
@@ -196,7 +203,7 @@ parameter CONF_STR = {
     "OEF,Video Region,Auto,NTSC,PAL;",
     "O13,ROM Header,Auto,No Header,LoROM,HiROM,ExHiROM;",
     "-;",
-    "P1O9B,FB Zoom,1024x512,512x512,256x256,128x128;",
+    "P1O9B,FB Mode,1024x512 (full),HPS Controlled;",
     "-;",
     "D0RC,Load Backup RAM;",
     "D0RD,Save Backup RAM;",
@@ -381,7 +388,7 @@ wire validDataOut;
 
 assign bridge_m0_clk = clk_sys;						// output  bridge_m0_clk
 
-wire [31:0] flag_data = {1'b0, DMA_REQ, IRQRequest, dbg_canWrite, mydebugCnt[27:0]};
+wire [31:0] flag_data = {hdmi_vbl, DMA_REQ, IRQRequest, dbg_canWrite, mydebugCnt[27:0]};
 
 
 reg axi_wait;
@@ -422,8 +429,8 @@ else begin
 			DMA_ACK <= 1'b0;
 			
 			if (bridge_m0_write) begin
-				case (bridge_m0_address[3:0])
-					4'h0: begin						// Write to GP0.
+				case (bridge_m0_address[7:0])
+					8'h00: begin						// Write to GP0.
 						gpuAdrA2 <= 1'b0;
 						cpuDataIn <= bridge_m0_writedata[31:0];
 						gpuSel <= 1'b1;
@@ -433,7 +440,7 @@ else begin
 						cmd_state <= 1;
 					end
 
-					4'h4: begin						// Write to GP1.
+					8'h04: begin						// Write to GP1.
 						gpuAdrA2 <= 1'b1;
 						cpuDataIn <= bridge_m0_writedata[31:0];
 						gpuSel <= 1'b1;
@@ -443,7 +450,7 @@ else begin
 						cmd_state <= 1;
 					end
 
-					4'h8: begin						// Write to Flags / Debug.
+					8'h08: begin					// Write to Flags / Debug.
 						gpuAdrA2 <= 1'b0;
 						gpuSel <= 1'b0;			// No GPU write!
 						gpu_write <= 1'b0;
@@ -454,7 +461,7 @@ else begin
 						cmd_state <= 1;
 					end
 
-					4'hC: begin						// Write to cpuDataIn + DMA_ACK high.
+					8'h0C: begin					// Write to cpuDataIn + DMA_ACK high.
 						gpuAdrA2 <= 1'b0;
 						gpuSel <= 1'b0;			// Don't think gpuSel is required?
 						gpu_write <= 1'b1;
@@ -463,13 +470,33 @@ else begin
 						axi_wait <= 1'b1;
 						cmd_state <= 1;
 					end
-
+					
+					8'h10: begin
+						my_fb_hsize <= bridge_m0_writedata[11:0];
+					end
+					
+					8'h14: begin
+						my_fb_vsize <= bridge_m0_writedata[11:0];
+					end
+					
+					8'h18: begin
+						my_fb_format <= bridge_m0_writedata[5:0];
+					end
+					
+					8'h1c: begin
+						my_fb_base <= bridge_m0_writedata;
+					end
+					
+					8'h20: begin
+						my_fb_stride <= bridge_m0_writedata[13:0];
+					end
+					
 					default:;
 				endcase
 			end
 			else if (bridge_m0_read) begin
-				case (bridge_m0_address[3:0])
-					4'h0: begin						// Read from GP0.
+				case (bridge_m0_address[7:0])
+					8'h00: begin					// Read from GP0.
 						gpuAdrA2 <= 1'b0;
 						gpuSel <= 1'b1;
 						gpu_write <= 1'b0;
@@ -478,7 +505,7 @@ else begin
 						cmd_state <= 2;
 					end
 
-					4'h4: begin						// Read from GP1.
+					8'h04: begin					// Read from GP1.
 						gpuAdrA2 <= 1'b1;
 						gpuSel <= 1'b1;
 						gpu_write <= 1'b0;
@@ -487,14 +514,14 @@ else begin
 						cmd_state <= 2;
 					end
 
-					4'h8: begin						// Read from Flags / Debug, without GPU select signals.
+					8'h08: begin					// Read from Flags / Debug, without GPU select signals.
 						bridge_m0_readdata <= flag_data;
 						axi_readvalid <= 1'b1;	// Pulse High for one clock (no wait for validDataOut).
 						axi_wait <= 1'b0;			// Need to assert this before returning to state 0!
 						cmd_state <= 0;
 					end
 
-					4'hC: begin						// Read from cpuDataOut, without GPU select signals (for DMA).
+					8'h0C: begin					// Read from cpuDataOut, without GPU select signals (for DMA).
 						bridge_m0_readdata <= cpuDataOut;
 						axi_readvalid <= 1'b1;	// Pulse High for one clock (no wait for validDataOut).
 						axi_wait <= 1'b0;			// Need to assert this before returning to state 0!

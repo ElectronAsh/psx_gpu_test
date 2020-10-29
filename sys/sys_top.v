@@ -746,11 +746,11 @@ ascal
 //  [5]   : TBD
 	
 	.o_fb_ena         (1'b1),
-	.o_fb_hsize       (my_fb_hsize),
-	.o_fb_vsize       (my_fb_vsize),
-	.o_fb_format      (6'b0_0_1_100),	// [5]=0. [4]=0=RGB (which should be correct for the PSX BGR mode?. [3]=1=16bits 1555. [2:0]=100=16bpp direct.
-	.o_fb_base        (32'h10000000),	// PSX GPU should be writing to the 256MByte offset in DDR?
-	.o_fb_stride      (14'd0),
+	.o_fb_hsize       (o_fb_hsize),
+	.o_fb_vsize       (o_fb_vsize),
+	.o_fb_format      (o_fb_format),	
+	.o_fb_base        (o_fb_base),
+	.o_fb_stride      (o_fb_stride),
 	
 	.avl_clk          (clk_100m),
 	.avl_waitrequest  (vbuf_waitrequest),
@@ -765,19 +765,42 @@ ascal
 );
 `endif
 
-// FB Zoom,1024x512,512x512,256x256,128x128;"
 
+wire [11:0] o_fb_hsize  = (FB_ZOOM==3'd0) ? 12'd1024		: my_fb_hsize;
+wire [11:0] o_fb_vsize  = (FB_ZOOM==3'd0) ? 12'd512		: my_fb_vsize;
+wire [5:0]  o_fb_format = (FB_ZOOM==3'd0) ? 6'b0_0_1_100	: my_fb_format;
+wire [31:0] o_fb_base   = (FB_ZOOM==3'd0) ? 32'h10000000	: my_fb_base;
+wire [13:0] o_fb_stride = (FB_ZOOM==3'd0) ? 14'd0			: my_fb_stride;
+
+
+// FB Zoom: 1024x512, 320x240, 320x240, 640x480.
+
+/*
 wire [11:0] my_fb_hsize = (FB_ZOOM==3'd0) ? 12'd1024:
-								  (FB_ZOOM==3'd1) ? 12'd512 :
-								  (FB_ZOOM==3'd2) ? 12'd256 :
-								  (FB_ZOOM==3'd3) ? 12'd128 :
-														  12'd1024;
+								  (FB_ZOOM==3'd1) ? 12'd320 :
+								  (FB_ZOOM==3'd2) ? 12'd320 :
+														  12'd640;
 
 wire [11:0] my_fb_vsize = (FB_ZOOM==3'd0) ? 12'd512 :
-								  (FB_ZOOM==3'd1) ? 12'd512 :
-								  (FB_ZOOM==3'd2) ? 12'd256 :
-								  (FB_ZOOM==3'd3) ? 12'd128 :
-														  12'd1024;
+								  (FB_ZOOM==3'd1) ? 12'd240 :
+								  (FB_ZOOM==3'd2) ? 12'd240 :
+														  12'd480;
+
+wire [5:0] my_fb_format = 6'b0_0_1_100;	// [5]=0. [4]=0=RGB (which should be correct for the PSX BGR mode?. [3]=1=16bits 1555. [2:0]=100=16bpp direct.
+
+// PSX GPU should be writing to the 256MByte offset in DDR?
+wire [32:0] my_fb_base = (FB_ZOOM==3'd0) ? 32'h10000000 :	// For 1024x512.
+								 (FB_ZOOM==3'd0) ? 32'h10000000 :	// For 320x240 (force upper FB).
+								 (FB_ZOOM==3'd0) ? (!fb_sel ? 32'h10000000 : 32'h10078000) :	// For 320x240 (swap via fb_sel flag).
+														 32'h10000000 :	// For 640x480.
+														  
+wire [13:0] my_fb_stride = (FB_ZOOM==3'd0) ? 14'd0 :		// For 1024x512.
+									(FB_ZOOM==3'd1) ? 14'd2048 :	// For 320x240 (upper FB).
+									(FB_ZOOM==3'd2) ? 14'd2048 :	// For 320x240 (swap via fb_sel flag).
+														   14'd2048;	// For 640x480.
+														
+
+*/
 
 reg        LFB_EN     = 0;
 reg        LFB_FLT    = 0;
@@ -1590,10 +1613,26 @@ emu emu
 	.bridge_m0_byteenable( bridge_m0_byteenable ),
 	.bridge_m0_clk( bridge_m0_clk ),
 	
-	.FB_ZOOM( FB_ZOOM )
+	.FB_ZOOM( FB_ZOOM ),		// output [2:0]  FB_ZOOM
+	.hdmi_vbl( hdmi_vbl ),		// input  hdmi_vbl
+
+	.my_fb_hsize( my_fb_hsize ),
+	.my_fb_vsize( my_fb_vsize ),
+	.my_fb_format( my_fb_format ),	
+	.my_fb_base( my_fb_base ),
+	.my_fb_stride( my_fb_stride )
 );
 
+wire [11:0] my_fb_hsize;
+wire [11:0] my_fb_vsize;
+wire [5:0] my_fb_format;
+wire [31:0] my_fb_base;
+wire [13:0] my_fb_stride;
+
+
 wire [2:0] FB_ZOOM;
+
+wire fb_sel;
 
 endmodule
 
