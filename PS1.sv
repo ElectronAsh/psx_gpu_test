@@ -189,7 +189,7 @@ wire reset = RESET | buttons[1] | status[0] | cart_download;
 
 `include "build_id.v"
 parameter CONF_STR = {
-    "PS1;;",
+    "PS1 (Laxer3a);;",
     "FS,CUE,Load PS1 BIN;",
     "FS,EXE,Load PS1 EXE;",
 	 "-;",
