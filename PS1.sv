@@ -322,6 +322,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 	.gamma_bus(gamma_bus)
 );
 
+
 gpu gpu_inst
 (
 	.clk( clk_sys ) ,					// input  clk
@@ -334,6 +335,17 @@ gpu gpu_inst
 	
 	.mydebugCnt(mydebugCnt) ,		// output [31:0] mydebugCnt
 	.dbg_canWrite(dbg_canWrite) ,	// output  dbg_canWrite
+	
+	.i_gpuPixClk( i_gpuPixClk ) ,			// input   i_gpuPixClk
+	.o_HBlank( o_HBlank ) ,					// output  o_HBlank
+	.o_VBlank( o_VBlank ) ,					// output  o_VBlank
+	.o_DotClk( o_DotClk ) ,					// output  o_DotClk
+	.o_HorizRes( o_HorizRes ) ,			// output [9:0]  o_HorizRes
+	.o_VerticalRes( o_VerticalRes ) ,	// output [8:0]  o_VerticalRes
+	.o_DisplayBaseX( o_DisplayBaseX ) ,	// output [9:0]  o_DisplayBaseX
+	.o_DisplayBaseY( o_DisplayBaseY ) ,	// output [8:0]  o_DisplayBaseY
+	.o_IsInterlace( o_IsInterlace ) ,	// output  o_IsInterlace
+	.o_CurrentField( o_CurrentField ) ,	// output  o_CurrentField
 	
 	.clkBus( clk_sys ) ,				// input  clkBus
 	
@@ -365,6 +377,17 @@ reg gpu_nrst;
 
 wire [31:0] mydebugCnt;
 wire dbg_canWrite;
+
+wire       i_gpuPixClk;
+wire       o_HBlank;
+wire       o_VBlank;
+wire       o_DotClk;
+wire [9:0] o_HorizRes;
+wire [8:0] o_VerticalRes;
+wire [9:0] o_DisplayBaseX;
+wire [8:0] o_DisplayBaseY;
+wire       o_IsInterlace;
+wire       o_CurrentField;
 
 wire o_command;
 wire i_busy = o_busyClient;
